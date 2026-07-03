@@ -1,0 +1,96 @@
+/* GISPL website — shared styles (direction 3a "Fusion")
+   Used by index.html (home) and careers.html.
+   Colors: navy #0B1E3B / nav #0A1A30 / deep #07142B · orange #F26A21 (hover #DA5A14)
+   Fonts: Archivo (display) · IBM Plex Sans (body/UI) · IBM Plex Mono (labels) · Newsreader (serif accents) */
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#fff;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#0B1E3B}
+.gx-in{width:100%;max-width:1728px;margin:0 auto;padding:0 clamp(24px,4.5vw,96px)}
+
+/* ---- navigation ---- */
+.gx-nav-link{color:rgba(255,255,255,.82);transition:color .15s ease}
+.gx-nav-link:hover{color:#fff}
+.gx-mm-panel,.gx-drop-panel{opacity:0;visibility:hidden;transform:translateY(7px);transition:opacity .18s ease,transform .18s ease,visibility .18s}
+.gx-mm:hover .gx-mm-panel,.gx-drop:hover .gx-drop-panel{opacity:1;visibility:visible;transform:translateY(0)}
+.gx-caret{transition:transform .18s ease}
+.gx-mm:hover .gx-caret,.gx-drop:hover .gx-caret{transform:rotate(180deg)}
+.gx-mm-item:hover,.gx-drop-link:hover{background:rgba(255,255,255,.05)}
+.gx-util-link{color:rgba(255,255,255,.62);transition:color .15s ease;text-decoration:none}
+.gx-util-link:hover{color:#fff}
+.gx-burger{display:none}
+.gx-mob-link:hover{color:#F4915A}
+.gx-svc-item{color:rgba(255,255,255,.72);transition:color .15s ease}
+.gx-svc-item:hover{color:#F26A21}
+.gx-spot{color:#fff;transition:color .15s ease}
+.gx-spot:hover{color:#F26A21}
+
+/* services mega — category rows */
+.gx-cat-row{transition:background .15s ease}
+.gx-cat-row:hover{background:rgba(255,255,255,.05)}
+
+/* careers mega — explore rows */
+.gx-cr-row{transition:background .15s ease}
+.gx-cr-row:hover{background:rgba(255,255,255,.045)}
+.gx-cr-row:hover .gx-cr-bar{background:#F26A21}
+.gx-cr-row:hover .gx-cr-arrow{transform:translateX(3px);color:#F26A21}
+.gx-cr-row:hover .gx-cr-label{color:#fff}
+.gx-cr-bar{background:transparent;transition:background .15s ease}
+.gx-cr-arrow{transition:transform .18s ease,color .15s ease}
+.gx-cr-label{transition:color .15s ease}
+.gx-cr-spot{transition:color .15s ease}
+.gx-cr-spot:hover{color:#F26A21}
+
+.gx-explore-link{transition:opacity .15s ease}
+.gx-explore-link:hover{opacity:.72}
+.gx-back{transition:opacity .15s ease}
+.gx-back:hover{opacity:.75}
+
+/* primary CTA */
+.gx-cta{transition:background .15s ease}
+.gx-cta:hover{background:#DA5A14}
+
+/* ---- home: marquee ---- */
+@keyframes gx-marquee{to{transform:translateX(-50%)}}
+.gx-mq:hover .gx-mq-track{animation-play-state:paused}
+.gx-mq-track>div{transition:opacity .15s ease}
+.gx-mq-track>div:hover span:first-child{color:#fff}
+.gx-mq-track span{transition:color .15s ease}
+@media(prefers-reduced-motion:reduce){.gx-mq-track{animation:none!important}}
+
+/* ---- home: service cards ---- */
+.gx-svc-card{transition:transform .18s ease,box-shadow .18s ease}
+.gx-svc-card:hover{transform:translateY(-4px);box-shadow:0 18px 40px -24px rgba(11,30,59,.35)}
+
+/* ---- careers: role list + chips + cards ---- */
+.gx-role-row{transition:background .15s ease}
+.gx-role-row:hover{background:#F7F5F0}
+.gx-role-row:hover .gx-apply{color:#DA5A14}
+.gx-apply{transition:color .15s ease}
+.gx-chip-filter{transition:background .15s ease,color .15s ease,border-color .15s ease}
+.gx-ben{transition:transform .18s ease,box-shadow .18s ease}
+.gx-ben:hover{transform:translateY(-4px);box-shadow:0 18px 40px -24px rgba(11,30,59,.35)}
+.gx-path{transition:transform .18s ease,box-shadow .18s ease}
+.gx-path:hover{transform:translateY(-5px);box-shadow:0 26px 52px -28px rgba(11,30,59,.4)}
+.gx-path:hover .gx-apply{color:#DA5A14}
+.hs-input::placeholder{color:#8A92A4}
+
+/* ---- contact: form, channels, offices, faq ---- */
+.hs-input:focus{border-color:rgba(242,106,33,.75)!important;background:rgba(255,255,255,.08)!important}
+select.hs-input option{color:#0B1E3B;background:#fff}
+.gx-ch{transition:border-color .15s ease,background .15s ease}
+.gx-ch:hover{border-color:rgba(242,106,33,.6);background:rgba(255,255,255,.08)}
+.gx-office{transition:transform .18s ease,box-shadow .18s ease}
+.gx-office:hover{transform:translateY(-4px);box-shadow:0 18px 40px -24px rgba(11,30,59,.35)}
+.gx-faq summary{list-style:none}
+.gx-faq summary::-webkit-details-marker{display:none}
+.gx-faq summary:hover .gx-faq-x{transform:scale(1.15)}
+.gx-faq[open] .gx-faq-x{transform:rotate(45deg)}
+
+/* ---- responsive (merged breakpoints) ---- */
+@media(max-width:1200px){.gx-tagline{display:none!important}}
+@media(max-width:1000px){.hero-grid{grid-template-columns:1fr!important}.hero-frame-col{display:none!important}.ins-grid{grid-template-columns:1fr!important}.why-grid{grid-template-columns:1fr!important}.why-media{min-height:300px!important}.story-grid{grid-template-columns:1fr!important}.story-media{min-height:340px!important}.path-grid{grid-template-columns:1fr 1fr!important}}
+@media(max-width:880px){.gx-nav{display:none!important}.gx-burger{display:inline-flex!important}.gx-util{display:none!important}.svc-grid{grid-template-columns:repeat(2,1fr)!important}.ben-grid{grid-template-columns:repeat(2,1fr)!important}.foot-grid{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:820px){.hire-grid{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:720px){.hero-search{flex-direction:column!important;align-items:stretch!important}.hs-cell{border-right:none!important;border-bottom:1px solid rgba(11,30,59,.12)!important}.path-grid{grid-template-columns:1fr!important}.mini-stories{grid-template-columns:1fr!important}.mosaic{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:560px){.svc-grid{grid-template-columns:1fr!important}.ben-grid{grid-template-columns:1fr!important}.hire-grid{grid-template-columns:1fr!important}.foot-grid{grid-template-columns:1fr!important}.gx-in{padding:0 26px}.hero-h1{font-size:42px!important}.rfp-grid{grid-template-columns:1fr!important}}
