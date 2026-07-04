@@ -45,6 +45,16 @@
     }
   }
 
+  /* ---------------- DPDP slide: live day count in the eyebrow ---------------- */
+  var dpdpEl = document.getElementById("dpdpDays");
+  if (dpdpEl) {
+    var d = function (iso) { return Math.ceil((new Date(iso + "T00:00:00") - new Date()) / 86400000); };
+    var toMandate = d("2026-11-13"), toEnforce = d("2027-05-13");
+    if (toMandate > 0) dpdpEl.textContent = "CONSENT MANDATE IN " + toMandate + " DAYS";
+    else if (toEnforce > 0) dpdpEl.textContent = "FULL ENFORCEMENT IN " + toEnforce + " DAYS";
+    /* past both dates: keep the static "DATA PROTECTION" fallback */
+  }
+
   /* ---------------- wireframe globe ---------------- */
   var cv = document.getElementById("globe");
   if (cv && cv.getContext) {

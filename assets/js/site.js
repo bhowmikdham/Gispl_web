@@ -8,13 +8,17 @@
   var SVC = [
     { name: "Compliance & certification", blurb: "Certify to the standards your customers, regulators and boards expect.", items: ["PCI DSS", "HIPAA", "SOC 1 & SOC 2", "GDPR", "RBI compliance (NBFC)", "Data Protection Act", "ISO standards"] },
     { name: "Consulting & maintenance", blurb: "ISO management-system design, implementation and ongoing upkeep.", items: ["ISO 27001 · ISMS", "ISO 27017 · Cloud", "ISO 27018 · Privacy", "ISO 22301 · Continuity", "ISO 20000 · ITSM", "ISO 27799 · Health"] },
-    { name: "Assessments & testing", blurb: "CERT-IN empanelled testing across your applications, network and OT.", items: ["VAPT services", "Network security testing", "Web & mobile app testing", "SCADA / OT testing", "IoT security testing", "Secure source code review", "Red / blue / purple teaming", "Compromise assessment", "Maturity assessment", "ERP security audit"] },
+    { name: "Assessments & testing", blurb: "CERT-IN empanelled testing across your applications, network and OT.", items: ["VAPT services", "Network security testing", "Web & mobile app testing", "AI & LLM security testing", "SCADA / OT testing", "IoT security testing", "Secure source code review", "Red / blue / purple teaming", "Compromise assessment", "Maturity assessment", "ERP security audit"] },
     { name: "Implementation & managed services", blurb: "Build, run and monitor your defences — 24×7, under one accountable team.", items: ["Cloud security", "Network security", "Application security", "IoT security", "Open source security", "Switching security", "SOC monitoring (24×7)", "Ransomware detection & response", "ISMS / ITSMS maintenance"] },
     { name: "Cyber forensics & investigations", blurb: "Evidence-grade forensics, investigations and workforce due-diligence.", items: ["Digital forensics", "Forensic audit", "Private investigations", "Fingerprint verification", "Employee background checks", "PhishSniper"] }
   ];
 
   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }
+
+  // items with a dedicated page deep-link to it; everything else goes to the services overview
+  var ITEM_HREFS = { "VAPT services": "service-vapt.html", "AI & LLM security testing": "service-ai-security.html" };
+  function itemHref(x) { return ITEM_HREFS[x] || "services.html"; }
 
   /* ---- Services mega-menu ---- */
   function paintRow(el, on) {
@@ -33,7 +37,7 @@
     var b = document.getElementById("svcBlurb"); if (b) b.textContent = d.blurb;
     var it = document.getElementById("svcItems");
     if (it) it.innerHTML = d.items.map(function (x) {
-      return '<a class="gx-svc-item" href="#" style="text-decoration:none;display:flex;align-items:center;gap:9px;padding:9px 0;font:500 14px \'IBM Plex Sans\';line-height:1.3">' + esc(x) + "</a>";
+      return '<a class="gx-svc-item" href="' + itemHref(x) + '" style="text-decoration:none;display:flex;align-items:center;gap:9px;padding:9px 0;font:500 14px \'IBM Plex Sans\';line-height:1.3">' + esc(x) + "</a>";
     }).join("");
   }
   each(document.querySelectorAll(".gx-cat-row"), function (r) {
