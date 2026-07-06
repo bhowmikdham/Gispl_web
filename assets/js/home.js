@@ -45,14 +45,23 @@
     }
   }
 
-  /* ---------------- DPDP slide: live day count in the eyebrow ---------------- */
-  var dpdpEl = document.getElementById("dpdpDays");
-  if (dpdpEl) {
-    var d = function (iso) { return Math.ceil((new Date(iso + "T00:00:00") - new Date()) / 86400000); };
+  /* ---------------- hero stats band: DPDP day count ---------------- */
+  var stat = document.getElementById("dpdpStat");
+  if (stat) {
+    var num = document.getElementById("dpdpStatDays"), lab = document.getElementById("dpdpStatLabel");
+    // deadlines are Indian law: count calendar days in IST regardless of the visitor's timezone
+    var d = function (iso) {
+      try {
+        var todayIST = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+        return Math.round((Date.parse(iso) - Date.parse(todayIST)) / 86400000);
+      } catch (e) {
+        return Math.ceil((new Date(iso + "T00:00:00") - new Date()) / 86400000);
+      }
+    };
     var toMandate = d("2026-11-13"), toEnforce = d("2027-05-13");
-    if (toMandate > 0) dpdpEl.textContent = "CONSENT MANDATE IN " + toMandate + " DAYS";
-    else if (toEnforce > 0) dpdpEl.textContent = "FULL ENFORCEMENT IN " + toEnforce + " DAYS";
-    /* past both dates: keep the static "DATA PROTECTION" fallback */
+    if (toMandate > 0) { num.textContent = toMandate; lab.textContent = "Days to DPDP mandate"; stat.style.display = ""; }
+    else if (toEnforce > 0) { num.textContent = toEnforce; lab.textContent = "Days to DPDP enforcement"; stat.style.display = ""; }
+    /* past both dates: the stat simply stays hidden */
   }
 
   /* ---------------- wireframe globe ---------------- */
