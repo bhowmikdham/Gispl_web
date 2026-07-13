@@ -143,7 +143,9 @@
   wire();
   statusMsg("Loading open roles…");
   GISPL.data.list("jobs").then(function (jobs) {
-    ROLES = jobs;
+    ROLES = jobs.slice().sort(function (a, b) { // newest first, independent of seed order
+      return (b.createdAt || "").localeCompare(a.createdAt || "");
+    });
     fillSelect(byId("rloc"), uniq(jobs.map(function (r) { return r.loc; })).sort(), "All locations");
     fillSelect(byId("rteam"), uniq(jobs.map(function (r) { return r.team; })).sort(), "All teams");
     fillSelect(byId("rtype"), uniq(jobs.map(function (r) { return r.type; })).sort(), "All types");

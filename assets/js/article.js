@@ -1,9 +1,16 @@
 /* GISPL — single insight/article detail. */
 (function () {
   "use strict";
-  var esc = GISPL.util.esc;
   function qp(name) { var m = new RegExp("[?&]" + name + "=([^&]*)").exec(location.search); return m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : ""; }
   function byId(id) { return document.getElementById(id); }
+  function notFound() {
+    byId("artNotFound").style.display = "block";
+    byId("artCat").style.display = byId("artTitle").style.display = byId("artMeta").style.display = byId("artCover").style.display = byId("artBody").style.display = "none";
+    document.title = "Article not found — GISPL";
+  }
+  if (!byId("artTitle")) return;
+  if (!(window.GISPL && GISPL.data)) { notFound(); return; } // data layer failed to load
+  var esc = GISPL.util.esc;
 
   function md(src) {
     return String(src || "").split(/\n\s*\n/).map(function (para) {
@@ -12,16 +19,10 @@
     }).join("");
   }
 
-  if (!byId("artTitle")) return;
   var slug = qp("slug");
 
   GISPL.data.get("posts", slug).then(function (post) {
-    if (!post || post.status === "draft") {
-      byId("artNotFound").style.display = "block";
-      byId("artCat").style.display = byId("artTitle").style.display = byId("artMeta").style.display = byId("artCover").style.display = byId("artBody").style.display = "none";
-      document.title = "Article not found — GISPL";
-      return;
-    }
+    if (!post || post.status === "draft") { notFound(); return; }
     document.title = post.title + " — GISPL Insights";
     var desc = document.querySelector('meta[name="description"]'); if (desc) desc.setAttribute("content", post.excerpt || post.title);
     byId("artCat").textContent = post.category || "";
@@ -36,6 +37,6 @@
     byId("artBody").innerHTML = md(post.bodyMd || post.excerpt || "");
   }).catch(function (e) {
     if (window.console) console.error("article load failed", e);
-    byId("artTitle").textContent = "Something went wrong";
+    notFound(); // consistent error state instead of a stuck skeleton
   });
 })();

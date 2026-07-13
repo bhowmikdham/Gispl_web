@@ -1,0 +1,197 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  GISPL client-portal backend — Lambda (Node 20, ESM) + HTTP API + DynamoDB
+  single-table + S3 documents bucket. STORE=dynamo, AUTH_MODE=password (HS256 JWT).
+
+Parameters:
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: >-
+      HS256 signing secret for password-mode JWTs. Must NOT be the dev default
+      ("dev-only-change-me") — src/config.js refuses to start dynamo mode with it.
+  CorsOrigin:
+    Type: String
+    Default: '*'
+    Description: Allowed CORS origin for the portal frontend (e.g. https://www.example.com).
+  TokenTtlSeconds:
+    Type: Number
+    Default: 28800
+    Description: JWT lifetime in seconds (default 8 hours).
+
+Resources:
+  PortalTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AWS::StackName}-portal'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  DocumentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      # No BucketName: CloudFormation generates a globally-unique one.
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  PortalHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref CorsOrigin
+        AllowHeaders:
+          - Authorization
+          - Content-Type
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        MaxAge: 600
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # CodeUri is relative to this template (portal-api/infra/) → project root.
+      CodeUri: ../
+      Handler: src/lambda.handler
+      Runtime: nodejs20.x
+      MemorySize: 256
+      Timeout: 15
+      Environment:
+        Variables:
+          STORE: dynamo
+          AUTH_MODE: password
+          DDB_TABLE: !Ref PortalTable
+          S3_BUCKET: !Ref DocumentsBucket
+          JWT_SECRET: !Ref JwtSecret
+          TOKEN_TTL_SECONDS: !Ref TokenTtlSeconds
+          CORS_ORIGINS: !Ref CorsOrigin
+      Policies:
+        # Least privilege: the API only ever reads. Exactly the DynamoDB actions
+        # the store uses (Query on CLIENT#/USER# partitions, GetItem for #META/#USER)
+        # plus BatchGetItem headroom, scoped to this table and its indexes; and
+        # s3:GetObject only, scoped to the documents bucket's objects (presigned GETs).
+        - Statement:
+            - Sid: DynamoReadOnly
+              Effect: Allow
+              Action:
+                - dynamodb:Query
+                - dynamodb:GetItem
+                - dynamodb:BatchGetItem
+              Resource:
+                - !GetAtt PortalTable.Arn
+                - !Sub '${PortalTable.Arn}/index/*'
+            - Sid: S3DocumentsReadOnly
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource:
+                - !Sub '${DocumentsBucket.Arn}/*'
+      Events:
+        Root:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref PortalHttpApi
+            Path: /
+            Method: ANY
+        Proxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref PortalHttpApi
+            Path: /{proxy+}
+            Method: ANY
+
+  # ---------------------------------------------------------------------------
+  # OPTIONAL: Cognito auth (currently disabled — the stack runs AUTH_MODE=password).
+  #
+  # To switch the backend to Cognito-verified tokens:
+  #   1. Uncomment UserPool + UserPoolClient below.
+  #   2. On ApiFunction, set Environment.Variables:
+  #        AUTH_MODE: cognito
+  #        COGNITO_REGION: !Ref AWS::Region
+  #        COGNITO_USER_POOL_ID: !Ref PortalUserPool
+  #        COGNITO_CLIENT_ID: !Ref PortalUserPoolClient
+  #      (JWT_SECRET / TOKEN_TTL_SECONDS become unused; POST /auth/login is bypassed.)
+  #   3. The frontend must obtain tokens via the Cognito Hosted UI / OAuth flow
+  #      instead of POST /auth/login, and send the Cognito access token as the
+  #      Bearer token. src/auth/cognito-verify.js validates RS256 via JWKS.
+  #
+  # PortalUserPool:
+  #   Type: AWS::Cognito::UserPool
+  #   Properties:
+  #     UserPoolName: !Sub '${AWS::StackName}-users'
+  #     UsernameAttributes:
+  #       - email
+  #     AutoVerifiedAttributes:
+  #       - email
+  #     AdminCreateUserConfig:
+  #       AllowAdminCreateUserOnly: true   # portal users are provisioned, not self-signup
+  #     Policies:
+  #       PasswordPolicy:
+  #         MinimumLength: 12
+  #         RequireLowercase: true
+  #         RequireUppercase: true
+  #         RequireNumbers: true
+  #         RequireSymbols: true
+  #     Schema:
+  #       - Name: email
+  #         Required: true
+  #         Mutable: false
+  #       # Custom attribute carrying the tenant id (claims.clientId).
+  #       - Name: clientId
+  #         AttributeDataType: String
+  #         Mutable: true
+  #
+  # PortalUserPoolClient:
+  #   Type: AWS::Cognito::UserPoolClient
+  #   Properties:
+  #     ClientName: !Sub '${AWS::StackName}-portal-web'
+  #     UserPoolId: !Ref PortalUserPool
+  #     GenerateSecret: false               # public SPA client
+  #     AllowedOAuthFlowsUserPoolClient: true
+  #     AllowedOAuthFlows:
+  #       - code
+  #     AllowedOAuthScopes:
+  #       - openid
+  #       - email
+  #     SupportedIdentityProviders:
+  #       - COGNITO
+  #     CallbackURLs:
+  #       - https://example.com/portal/     # replace with the deployed portal URL
+  #     LogoutURLs:
+  #       - https://example.com/portal/
+  # ---------------------------------------------------------------------------
+
+Outputs:
+  ApiUrl:
+    Description: HTTP API endpoint (set NEXT_PUBLIC_API_BASE to this, no trailing slash).
+    Value: !Sub 'https://${PortalHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+  TableName:
+    Description: DynamoDB table (seed it with scripts/seed-dynamo.js, DDB_TABLE=this).
+    Value: !Ref PortalTable
+  BucketName:
+    Description: S3 documents bucket (upload objects under documents/<id>.<ext>).
+    Value: !Ref DocumentsBucket

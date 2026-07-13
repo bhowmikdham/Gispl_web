@@ -1,0 +1,12 @@
+.DS_Store
+assets/images/source/
+
+# portal (Next.js) build artifacts
+node_modules/
+portal/node_modules/
+portal/.next/
+portal/out/
+portal/next-env.d.ts
+
+# deploy staging tree (assembled by scripts/build-dist.py)
+dist/

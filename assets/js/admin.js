@@ -42,8 +42,11 @@
     var bg = document.createElement("div"); bg.className = "modal-bg";
     bg.innerHTML = '<div class="modal">' + html + "</div>";
     document.body.appendChild(bg);
-    bg.addEventListener("click", function (e) { if (e.target === bg) bg.remove(); });
-    return { el: bg, close: function () { bg.remove(); } };
+    function close() { bg.remove(); document.removeEventListener("keydown", onKey); }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    document.addEventListener("keydown", onKey);
+    bg.addEventListener("click", function (e) { if (e.target === bg) close(); });
+    return { el: bg, close: close };
   }
 
   /* ---------------- auth gate ---------------- */
@@ -59,6 +62,9 @@
     q("liBtn").addEventListener("click", function () {
       var email = q("liEmail").value.trim() || "admin@gispl.com";
       GISPL.auth.signIn(email).then(showApp);
+    });
+    Array.prototype.forEach.call(["liEmail", "liPass"], function (id) {
+      q(id).addEventListener("keydown", function (e) { if (e.key === "Enter") q("liBtn").click(); });
     });
   }
   function showApp() {
@@ -236,7 +242,7 @@
   }
   function appDetail(a) {
     if (!a) return;
-    var resume = a.resumeDataUrl
+    var resume = (a.resumeDataUrl && /^data:/.test(a.resumeDataUrl))
       ? "<a href='" + a.resumeDataUrl + "' download='" + esc(a.resumeName || "resume") + "'>Download résumé (" + esc(a.resumeName || "file") + ")</a>"
       : (a.resumeName ? "<span class='muted'>" + esc(a.resumeName) + " (stored server-side in production)</span>" : "<span class='muted'>No résumé attached</span>");
     var history = (a.stageHistory || []).map(function (h) {
@@ -260,10 +266,10 @@
       + "<div style='margin:12px 0'><strong>" + esc(a.jobTitle) + "</strong></div>"
       + (a.message ? "<div class='adm-card' style='background:#F6F7F9;margin:0 0 14px'>" + esc(a.message) + "</div>" : "")
       + "<div class='field'>" + resume + "</div>"
-      + "<h3 style='font:600 13px \"IBM Plex Mono\";letter-spacing:.1em;color:#8A92A4;text-transform:uppercase;margin:18px 0 6px'>Stage history</h3>" + history
-      + "<h3 style='font:600 13px \"IBM Plex Mono\";letter-spacing:.1em;color:#8A92A4;text-transform:uppercase;margin:18px 0 6px'>Notes</h3>" + notes
+      + "<h3 style='font:500 13px \"IBM Plex Mono\";letter-spacing:.1em;color:#8A92A4;text-transform:uppercase;margin:18px 0 6px'>Stage history</h3>" + history
+      + "<h3 style='font:500 13px \"IBM Plex Mono\";letter-spacing:.1em;color:#8A92A4;text-transform:uppercase;margin:18px 0 6px'>Notes</h3>" + notes
       + "<div style='display:flex;gap:8px;margin:8px 0 4px'><input id='adNote' placeholder='Add an internal note…'><button class='adm-btn subtle' id='adNoteBtn'>Add</button></div>"
-      + (a.emails && a.emails.length ? "<h3 style='font:600 13px \"IBM Plex Mono\";letter-spacing:.1em;color:#8A92A4;text-transform:uppercase;margin:18px 0 6px'>Sent emails</h3>" + emails : "")
+      + (a.emails && a.emails.length ? "<h3 style='font:500 13px \"IBM Plex Mono\";letter-spacing:.1em;color:#8A92A4;text-transform:uppercase;margin:18px 0 6px'>Sent emails</h3>" + emails : "")
       + "<hr style='border:none;border-top:1px solid rgba(11,30,59,.1);margin:20px 0'>"
       + "<h3 style='font:600 15px Archivo;margin:0 0 10px'>Advance / update stage</h3>"
       + "<div class='row2'><div class='field'><label>Move to stage</label><select id='mvStage'>" + GISPL.STAGES.map(function (s) { return opt(s, a.stage, STAGE_META[s][1]); }).join("") + "</select></div>"

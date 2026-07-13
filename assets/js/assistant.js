@@ -13,7 +13,8 @@
   var path = (location.pathname.split("/").pop() || "index.html");
   if (path === "contact.html") return; // that page IS the conversion — no bot
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+  function safeHref(h) { return /^\s*(javascript|data|vbscript):/i.test(String(h || "")) ? "#" : String(h || "#"); }
 
   /* ================= knowledge base ================= */
   var CONTACT_CTA = { label: "Contact us", href: "contact.html" };
@@ -24,7 +25,7 @@
       a: "GISPL covers the full security lifecycle: <strong>VAPT &amp; penetration testing</strong>, <strong>AI &amp; LLM security testing</strong>, <strong>ISO 27001</strong>, <strong>PCI DSS</strong>, <strong>SEBI CSCRF audits</strong>, <strong>DPDP readiness</strong>, <strong>24×7 managed security</strong>, <strong>cyber forensics</strong> and security training — one accountable team.",
       cta: { label: "Explore all services", href: "services.html" } },
     { id: "vapt", keys: "vapt penetration pentest pen test testing vulnerability assessment web mobile network cloud scope scoping",
-      a: "Our CERT-In empanelled VAPT covers web, mobile, network, cloud, API and OT — manual, chained exploitation that proves impact, ranked by exploitability, with a free retest and closure certificate after you remediate.",
+      a: "Our CERT-IN empanelled VAPT covers web, mobile, network, cloud, API and OT — manual, chained exploitation that proves impact, ranked by exploitability, with a free retest and closure certificate after you remediate.",
       cta: { label: "VAPT & pen testing", href: "service-vapt.html" } },
     { id: "methodology", keys: "methodology phases process steps how does the test work approach engagement",
       a: "Every engagement runs a disciplined cycle: scope &amp; rules of engagement → reconnaissance → manual exploitation &amp; validation → board-ready reporting → retest &amp; closeout.",
@@ -36,7 +37,7 @@
       a: "AI is moving into core operations — <strong>40% of enterprise applications are expected to ship AI agents by end-2026</strong>. That creates an attack surface traditional testing never covered, and procurement teams and auditors now ask for evidence it has been tested.",
       cta: { label: "AI & LLM security testing", href: "service-ai-security.html" } },
     { id: "cscrf", keys: "sebi cscrf stock broker regulated entity market intermediary amc exchange audit deadline june cyber resilience framework",
-      a: "SEBI's CSCRF first-audit deadline for qualified and mid-size REs was <strong>30 June 2026</strong> — non-compliance now accrues daily penalties plus exchange action. Audits are valid only from CERT-In empanelled organisations; GISPL is one, and the cycle is annual (half-yearly for QSBs).",
+      a: "SEBI's CSCRF first-audit deadline for qualified and mid-size REs was <strong>30 June 2026</strong> — non-compliance now accrues daily penalties plus exchange action. Audits are valid only from CERT-IN empanelled organisations; GISPL is one, and the cycle is annual (half-yearly for QSBs).",
       cta: { label: "SEBI CSCRF audit", href: "sebi-cscrf.html" } },
     { id: "dpdp", keys: "dpdp data protection act privacy digital personal deadline dates enforcement penalty fiduciary",
       a: "Two fixed dates: the <strong>Consent Manager mandate on 13 November 2026</strong> and <strong>full enforcement on 13 May 2027</strong>, with penalties up to ₹250 crore. Our readiness programme maps consent, rights and breach-reporting duties to your actual systems.",
@@ -45,7 +46,7 @@
       a: "From <strong>13 November 2026</strong>, every data fiduciary relying on consent must integrate with a registered Consent Manager. Our DPDP programme includes choosing and wiring that integration path.",
       cta: { label: "DPDP readiness", href: "dpdp-readiness.html" } },
     { id: "certin", keys: "cert-in cert in certin empanelled empanelment government recognised recognized",
-      a: "GISPL is a <strong>CERT-In empanelled organisation</strong> — the empanelment regulators, banks and boards recognise, and a hard requirement for SEBI CSCRF audits. Roughly 200 firms in India hold it." },
+      a: "GISPL is a <strong>CERT-IN empanelled organisation</strong> — the empanelment regulators, banks and boards recognise, and a hard requirement for SEBI CSCRF audits. Roughly 200 firms in India hold it." },
     { id: "iso", keys: "iso 27001 27017 27018 22301 20000 27799 isms certification implement audit ready",
       a: "We take you from gap analysis to certification readiness across ISO 27001 (ISMS), 27017, 27018, 22301, 20000 and 27799 — build, implement and maintain, end to end.",
       cta: CONTACT_CTA },
@@ -90,7 +91,7 @@
       a: "Sponsored certifications (OSCP, CISSP, ISO LA, PCI QSA), hybrid working, family medical cover, real time off and global mobility across our four offices.",
       cta: { label: "Benefits & wellbeing", href: "careers.html#benefits" } },
     { id: "about", keys: "about company who is gispl history experience years old founded background trust",
-      a: "GISPL (G-Info Technology Solutions) is a CERT-In empanelled information-security consultancy — <strong>15+ years</strong>, <strong>200+ engagements</strong>, <strong>120+ specialists</strong>, protecting banks, hospitals, telecoms and governments across three continents.",
+      a: "GISPL (G-Info Technology Solutions) is a CERT-IN empanelled information-security consultancy — <strong>15+ years</strong>, <strong>200+ engagements</strong>, <strong>120+ specialists</strong>, protecting banks, hospitals, telecoms and governments across three continents.",
       cta: { label: "About GISPL", href: "about.html" } },
     { id: "clients", keys: "clients customers who work with panasonic interglobe stellar punj lloyd references big-4 big4",
       a: "Security teams at <strong>Panasonic, Punj Lloyd, InterGlobe and Stellar</strong> trust GISPL, and we partner with Big-4 consulting firms on delivery." },
@@ -189,7 +190,7 @@
     '<span class="gx-ai-ht"><span class="gx-ai-title">GISPL Assistant</span>' +
     '<span class="gx-ai-sub">Guided answers &middot; replies instantly</span></span>' +
     '<button class="gx-ai-x" aria-label="Close">&times;</button></div>' +
-    '<div class="gx-ai-log" id="gxAiLog"></div>' +
+    '<div class="gx-ai-log" id="gxAiLog" role="log" aria-live="polite"></div>' +
     '<div class="gx-ai-chips" id="gxAiChips"></div>' +
     '<form class="gx-ai-inputrow" id="gxAiForm">' +
     '<input class="gx-ai-input" id="gxAiInput" type="text" placeholder="Type a question…" autocomplete="off" maxlength="200" aria-label="Ask a question" />' +
@@ -231,7 +232,7 @@
     setTimeout(function () {
       t.remove();
       var html = entry.a;
-      if (entry.cta) html += '<a class="gx-ai-btn sm" href="' + entry.cta.href + '">' + esc(entry.cta.label) + ' <span aria-hidden="true">&rarr;</span></a>';
+      if (entry.cta) html += '<a class="gx-ai-btn sm" href="' + esc(safeHref(entry.cta.href)) + '">' + esc(entry.cta.label) + ' <span aria-hidden="true">&rarr;</span></a>';
       addMsg("gx-ai-a", html);
     }, reduce ? 0 : 550);
   }
@@ -271,6 +272,7 @@
     open = v;
     panel.classList.toggle("open", v);
     fab.setAttribute("aria-expanded", v ? "true" : "false");
+    if (!v && document.activeElement && panel.contains(document.activeElement)) fab.focus();
     hideNudge();
     if (v) { greet(seed); setTimeout(function () { input.focus(); }, 200); }
   }
@@ -293,7 +295,7 @@
     fab.classList.add("on");
     if (reduce) fab.classList.add("bar");
     else setTimeout(function () { fab.classList.add("bar"); }, 500);
-    window.removeEventListener("scroll", onScroll);
+    window.removeEventListener("scroll", onScroll, { passive: true });
   }
   function onScroll() { if (window.scrollY > 420) reveal(); }
   window.addEventListener("scroll", onScroll, { passive: true });

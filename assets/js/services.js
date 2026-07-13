@@ -42,10 +42,15 @@
 
   /* ---- DPDP deadline countdown ---- */
   Array.prototype.forEach.call(document.querySelectorAll("[data-deadline]"), function (el) {
-    var d = new Date(el.getAttribute("data-deadline") + "T00:00:00+05:30");
-    if (isNaN(d)) return;
-    var days = Math.ceil((d - new Date()) / 86400000);
-    if (days > 0) el.textContent = "· " + days + " DAYS LEFT";
+    var iso = el.getAttribute("data-deadline"), days;
+    try { // whole calendar days in IST — same math as the DPDP page, so the counts always agree
+      var todayIST = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+      days = Math.round((Date.parse(iso) - Date.parse(todayIST)) / 86400000);
+    } catch (e) {
+      days = Math.ceil((new Date(iso + "T00:00:00+05:30") - new Date()) / 86400000);
+    }
+    if (isNaN(days)) return;
+    el.textContent = days > 0 ? "· " + days + " DAYS LEFT" : "· DEADLINE PASSED";
   });
 
   /* ---- capability explorer tabs ---- */
@@ -53,7 +58,9 @@
   var panels = document.querySelectorAll(".sv-x-panel");
   function select(i) {
     Array.prototype.forEach.call(tabs, function (t) {
-      t.setAttribute("aria-selected", t.getAttribute("data-x") === String(i) ? "true" : "false");
+      var on = t.getAttribute("data-x") === String(i);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1; // roving tabindex — only the active tab is in the tab order
     });
     Array.prototype.forEach.call(panels, function (p) {
       p.classList.toggle("sv-x-live", p.getAttribute("data-xp") === String(i));

@@ -213,9 +213,9 @@
           name: payload.name, email: payload.email, phone: payload.phone || "",
           message: payload.message || "",
           resumeName: resumeMeta.name || "", resumeSize: resumeMeta.size || 0,
-          resumeDataUrl: resumeMeta.dataUrl || "", resumeDropped: false,
+          resumeDataUrl: resumeMeta.dataUrl || "", resumeDropped: !!resumeMeta.dropped,
           stage: "applied",
-          stageHistory: [{ stage: "applied", at: nowISO(), byUser: "candidate", note: "Applied via website", emailSent: true }],
+          stageHistory: [{ stage: "applied", at: nowISO(), byUser: "candidate", note: "Applied via website", emailSent: false }],
           notes: [],
           createdAt: nowISO(), updatedAt: nowISO()
         };
@@ -233,11 +233,11 @@
         return new Promise(function (res, rej) {
           var fr = new FileReader();
           fr.onload = function () { try { res(store({ name: f.name, dataUrl: fr.result, size: f.size })); } catch (e) { rej(e); } };
-          fr.onerror = function () { try { res(store({ name: f.name, size: f.size })); } catch (e) { rej(e); } };
+          fr.onerror = function () { try { res(store({ name: f.name, size: f.size, dropped: true })); } catch (e) { rej(e); } };
           fr.readAsDataURL(f);
         });
       }
-      return new Promise(function (res, rej) { try { res(store(f ? { name: f.name, size: f.size } : {})); } catch (e) { rej(e); } });
+      return new Promise(function (res, rej) { try { res(store(f ? { name: f.name, size: f.size, dropped: true } : {})); } catch (e) { rej(e); } });
     });
   }
   function fillTemplate(tpl, app) {
@@ -303,7 +303,7 @@
      API: replace with Cognito Hosted UI (PKCE) — token attached to writes. */
   var AUTHKEY = "gispl:admin-session";
   var GISPLAuth = {
-    isSignedIn: function () { return CONFIG.MODE !== "local" ? !!jget(AUTHKEY) : !!jget(AUTHKEY); },
+    isSignedIn: function () { return !!jget(AUTHKEY); },
     user: function () { var s = jget(AUTHKEY); return s ? s.email : null; },
     signIn: function (email) { jset(AUTHKEY, { email: email || "admin@gispl.com", at: nowISO() }); return Promise.resolve(true); },
     signOut: function () { localStorage.removeItem(AUTHKEY); },

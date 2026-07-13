@@ -30,6 +30,9 @@
 
     Array.prototype.forEach.call(steps, function (st, i) {
       st.addEventListener("click", function () { go(i); });
+      st.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(i); }
+      });
     });
     hero.addEventListener("mouseenter", function () { paused = true; });
     hero.addEventListener("mouseleave", function () { paused = false; });
@@ -37,13 +40,20 @@
     apply();
     if (!reduce) {
       setInterval(function () {
-        if (paused) return;
+        if (paused || document.hidden) return;
         prog += 80 / DWELL;
         if (prog >= 1) { idx = (idx + 1) % N; prog = 0; }
         apply();
       }, 80);
     }
   }
+
+  /* later slides' background images load after first paint, not up front (~700KB saved on arrival) */
+  Array.prototype.forEach.call(document.querySelectorAll(".hero-bg[data-bg]"), function (el) {
+    function show() { el.style.background = "url('" + el.getAttribute("data-bg") + "') " + (el.getAttribute("data-pos") || "center") + "/cover no-repeat"; }
+    if (document.readyState === "complete") show();
+    else window.addEventListener("load", show, { once: true });
+  });
 
   /* ---------------- hero stats band: DPDP day count ---------------- */
   var stat = document.getElementById("dpdpStat");
@@ -101,6 +111,32 @@
       }
     }
     render();
-    if (!reduce) setInterval(function () { ang += 0.012; render(); }, 33);
+    if (!reduce) {
+      // spin only while the canvas is on screen and the tab is visible — no idle CPU burn
+      var running = false, rafId = null, last = null;
+      var onScreen = true, tabVisible = !document.hidden;
+      function loop(t) {
+        if (!running) { rafId = null; return; }
+        if (last != null) { ang += (t - last) * 0.00036; render(); }
+        last = t;
+        rafId = requestAnimationFrame(loop);
+      }
+      function sync() {
+        var want = onScreen && tabVisible;
+        if (want === running) return;
+        running = want; last = null;
+        if (want && rafId == null) rafId = requestAnimationFrame(loop);
+      }
+      if ("IntersectionObserver" in window) {
+        new IntersectionObserver(function (en) { onScreen = en[0].isIntersecting; sync(); }).observe(cv);
+      }
+      document.addEventListener("visibilitychange", function () { tabVisible = !document.hidden; sync(); });
+      sync();
+    }
+    // re-rasterize if the canvas moves to a display with a different pixel ratio
+    window.addEventListener("resize", function () {
+      var d2 = Math.min(window.devicePixelRatio || 1, 2);
+      if (d2 !== dpr) { dpr = d2; cv.width = size * dpr; cv.height = size * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); render(); }
+    });
   }
 })();

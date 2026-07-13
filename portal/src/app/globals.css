@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+/* Fusion design tokens — duplicated from the parent site's assets/css/site.css
+   by design (never import site.css here: preflight/global-selector bleed). */
+@theme {
+  --color-navy-deep: #07142b;
+  --color-navy-nav: #0a1a30;
+  --color-navy: #0b1e3b;
+  --color-navy-panel: #0c2136;
+  --color-orange: #f26a21;
+  --color-orange-hover: #da5a14;
+  --color-orange-light: #f4915a;
+  --color-orange-onlight: #c4632a;
+  --color-bg-cool: #eef1f5;
+  --color-bg-warm: #f4f2ed;
+  --color-bg-soft: #f7f5f0;
+  --color-muted: #8a92a4;
+  --color-muted-strong: #5b647c;
+  --color-border-card: rgb(11 30 59 / 0.08);
+  --color-border-card-strong: rgb(11 30 59 / 0.18);
+  --color-sev-critical: #c0392b;
+  --color-sev-high: #f26a21;
+  --color-sev-medium: #d9910f;
+  --color-sev-low: #3e7c59;
+  --color-sev-info: #8a92a4;
+  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-body: var(--font-plex-sans), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  --radius-btn: 9px;
+  --radius-card: 13px;
+  --radius-modal: 16px;
+  --radius-pill: 20px;
+  --shadow-lift: 0 18px 40px -24px rgb(11 30 59 / 0.35);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background: var(--color-bg-cool);
+  color: var(--color-navy);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* full-width content rail — matches the public site's .gx-in (max 1728, fluid gutter) */
+.portal-rail {
+  width: 100%;
+  max-width: 1728px;
+  margin-inline: auto;
+  padding-inline: clamp(20px, 3.5vw, 64px);
+}
+
+/* soft label — the calm alternative to the mono eyebrow, for prominent meta */
+.label {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  color: var(--color-muted-strong);
+}
+
+/* GISPL signature hairline (from the site's assistant panel) */
+.hairline-brand {
+  height: 2px;
+  background: linear-gradient(90deg, #f2b01e, #f26a21, #a91e47);
+}
+
+/* the site's hover idiom: translateY(-4px) + soft shadow */
+.lift {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lift);
+}
+
+/* eyebrow — small mono meta label ONLY (never a section label above a heading).
+   Softened letter-spacing so dense screens read calmer. */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 120;
+  background: var(--color-orange);
+  color: #fff;
+  font: 600 14px var(--font-body);
+  padding: 12px 18px;
+  border-radius: 0 0 10px 0;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+dialog::backdrop {
+  background: rgb(7 20 43 / 0.5);
+}
+
+/* ---- entrance + scroll-reveal animations ---- */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes drawer-in {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* reveal element starts hidden; JS adds .is-in when it scrolls into view */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.reveal.is-in {
+  animation: reveal-up 0.55s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+}
+
+.animate-drawer { animation: drawer-in 0.32s cubic-bezier(0.22, 0.8, 0.3, 1) both; }
+.animate-modal { animation: modal-in 0.24s cubic-bezier(0.22, 0.8, 0.3, 1) both; }
+.animate-fade { animation: fade-in 0.4s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .lift,
+  .lift:hover {
+    transition: none;
+    transform: none;
+  }
+  .reveal,
+  .reveal.is-in,
+  .animate-drawer,
+  .animate-modal,
+  .animate-fade {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}

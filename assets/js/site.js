@@ -71,6 +71,10 @@
       closeMenus();
       if (willOpen) { m.classList.add("open"); trigger.setAttribute("aria-expanded", "true"); }
     });
+    // span triggers aren't natively activatable — mirror click on Enter/Space
+    trigger.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); trigger.click(); }
+    });
   });
   document.addEventListener("click", function (ev) {
     if (!(ev.target.closest && ev.target.closest(".gx-mm, .gx-drop"))) closeMenus();
@@ -283,6 +287,7 @@
     burger.addEventListener("click", function () {
       var open = mob.style.display === "none" || mob.style.display === "";
       mob.style.display = open ? "block" : "none";
+      burger.setAttribute("aria-expanded", open ? "true" : "false");
     });
     mob.addEventListener("click", function (ev) {
       if (ev.target.closest && ev.target.closest("a")) mob.style.display = "none";

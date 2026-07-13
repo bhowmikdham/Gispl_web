@@ -1,0 +1,22 @@
+{
+  "name": "gispl-portal-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "GISPL client portal API — runs locally (file store) or on AWS Lambda (DynamoDB).",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node src/http/local-server.js",
+    "dev": "node --watch src/http/local-server.js",
+    "seed": "node scripts/seed.js",
+    "seed:dynamo": "node scripts/seed-dynamo.js",
+    "test": "node --test"
+  },
+  "dependencies": {},
+  "optionalDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0",
+    "@aws-sdk/client-s3": "^3.700.0",
+    "@aws-sdk/s3-request-presigner": "^3.700.0"
+  }
+}

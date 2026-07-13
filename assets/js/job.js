@@ -73,9 +73,12 @@
         phone: byId("afPhone").value.trim(),
         message: byId("afMsg").value.trim(),
         file: file
-      }).then(function () {
+      }).then(function (app) {
         form.style.display = "none";
         byId("applyOk").style.display = "block";
+        // storage quota / file-read failure: application saved, CV not — tell the candidate
+        var warn = byId("applyOkWarn");
+        if (warn && app && app.resumeDropped) warn.style.display = "block";
       }).catch(function (e2) {
         if (window.console) console.error("apply failed", e2);
         btn.disabled = false; btn.textContent = "Submit application";
