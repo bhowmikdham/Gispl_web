@@ -1,0 +1,162 @@
+# The hand-maintained pages, as data.
+#
+# One list, three consumers: the sitemap, the site-search index, and
+# scripts/apply-page-seo.py (which stamps canonical/og/JSON-LD into each file).
+# Before this, the search index was a separate hand-written array in site.js
+# that covered 12 of 15 pages — adding a page and forgetting to index it was
+# silent. check-content.py now fails when a shipped page is missing here.
+#
+# `path` is the served URL. `nav` marks which top-level nav item highlights.
+# `schema` picks the extra JSON-LD block, beyond Organization + Breadcrumbs.
+
+- path: /
+  file: index.html
+  title: Home
+  nav: null
+  breadcrumb: Home
+  schema: website
+  priority: "1.0"
+  changefreq: weekly
+  keywords: gispl g-info home cybersecurity compliance forensics cert-in overview
+
+- path: /services.html
+  file: services.html
+  title: Services overview
+  nav: services
+  breadcrumb: Services
+  schema: null
+  priority: "0.9"
+  changefreq: monthly
+  keywords: services capabilities overview lifecycle offerings what we do
+
+- path: /service-vapt.html
+  file: service-vapt.html
+  title: VAPT services
+  nav: services
+  breadcrumb: VAPT & Penetration Testing
+  parent: /services.html
+  schema: service
+  serviceType: Vulnerability Assessment and Penetration Testing
+  priority: "0.9"
+  changefreq: monthly
+  keywords: vapt penetration pentest pen testing vulnerability assessment web mobile network cloud cert-in
+
+- path: /service-ai-security.html
+  file: service-ai-security.html
+  title: AI & LLM security testing
+  nav: services
+  breadcrumb: AI & LLM Security Testing
+  parent: /services.html
+  schema: service
+  serviceType: AI and LLM Security Testing
+  priority: "0.9"
+  changefreq: monthly
+  keywords: ai llm artificial intelligence prompt injection jailbreak rag agent model machine learning
+
+- path: /vapt-methodology.html
+  file: vapt-methodology.html
+  title: VAPT methodology
+  nav: services
+  breadcrumb: VAPT Methodology
+  parent: /service-vapt.html
+  schema: null
+  priority: "0.7"
+  changefreq: yearly
+  keywords: methodology process phases approach engagement how testing works scoping reporting retest
+
+- path: /sebi-cscrf.html
+  file: sebi-cscrf.html
+  title: SEBI CSCRF
+  nav: services
+  breadcrumb: SEBI CSCRF
+  parent: /services.html
+  schema: service
+  serviceType: SEBI CSCRF Audit
+  priority: "0.8"
+  changefreq: monthly
+  keywords: sebi cscrf broker audit regulated entity market cyber resilience framework compliance
+
+- path: /dpdp-readiness.html
+  file: dpdp-readiness.html
+  title: DPDP readiness
+  nav: services
+  breadcrumb: DPDP Readiness
+  parent: /services.html
+  schema: service
+  serviceType: DPDP Act Readiness
+  priority: "0.8"
+  changefreq: monthly
+  keywords: dpdp data protection privacy consent readiness deadline enforcement fiduciary act india
+
+- path: /industries.html
+  file: industries.html
+  title: Industries
+  nav: industries
+  breadcrumb: Industries
+  schema: null
+  priority: "0.7"
+  changefreq: monthly
+  keywords: industries sectors bfsi banking telecom manufacturing pharma healthcare government
+
+- path: /about.html
+  file: about.html
+  title: About GISPL
+  nav: about
+  breadcrumb: About
+  schema: aboutpage
+  priority: "0.6"
+  changefreq: yearly
+  keywords: about company story leadership team offices history who we are
+
+- path: /careers.html
+  file: careers.html
+  title: Careers
+  nav: careers
+  breadcrumb: Careers
+  schema: null
+  priority: "0.7"
+  changefreq: monthly
+  keywords: careers jobs hiring work life benefits graduate intern apply
+
+- path: /contact.html
+  file: contact.html
+  title: Contact & request a proposal
+  nav: null
+  breadcrumb: Contact
+  schema: contact
+  priority: "0.8"
+  changefreq: yearly
+  keywords: contact proposal rfp quote enquiry offices phone email incident response
+
+# Legal pages: indexable and in the sitemap (a privacy policy nobody can find
+# is not much of a policy), but no nav highlight and low priority.
+- path: /privacy.html
+  file: privacy.html
+  title: Privacy policy
+  nav: null
+  breadcrumb: Privacy
+  schema: null
+  priority: "0.3"
+  changefreq: yearly
+  keywords: privacy policy data protection cookies dpdp grievance officer
+
+- path: /terms.html
+  file: terms.html
+  title: Terms of use
+  nav: null
+  breadcrumb: Terms
+  schema: null
+  priority: "0.3"
+  changefreq: yearly
+  keywords: terms of use legal disclaimer governing law
+
+- path: /security/disclosure/
+  file: security/disclosure/index.html
+  title: Vulnerability disclosure
+  nav: null
+  breadcrumb: Vulnerability disclosure
+  generated: true
+  schema: null
+  priority: "0.4"
+  changefreq: yearly
+  keywords: security.txt vulnerability disclosure responsible report bug safe harbour contact

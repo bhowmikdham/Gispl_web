@@ -115,6 +115,8 @@ def main():
         prefix = argv[argv.index("--base-path") + 1].rstrip("/")
 
     site = load_yaml(os.path.join(CONTENT, "site.yml"))
+    global PAGES
+    PAGES = load_yaml(os.path.join(CONTENT, "pages.yml")) or []
 
     # og:image goes on every page, so a missing default is a dangling reference
     # site-wide — scrapers fetch it and fail, which is worse than no tag.
@@ -383,6 +385,34 @@ def main():
                                          "employmentType", "url", "postedAt")}
                       for r in open_roles], ensure_ascii=False, indent=1))
 
+    # ---------------------------------------------------- search + security
+    emit("/search/",
+         seo.head(site, title="Search — %s" % site["name"],
+                  description="Search GISPL services, insights and open roles.",
+                  path="/search/", noindex=True),
+         templates.search_page(), None, None, scripts=["search.js"])
+
+    emit("/security/disclosure/",
+         seo.head(site, title="Vulnerability disclosure policy — %s" % site["name"],
+                  description="How to report a security vulnerability in GISPL's "
+                              "website or public services, and what we commit to in return.",
+                  path="/security/disclosure/",
+                  jsonld=[seo.breadcrumbs(site, [
+                      ("Home", "/"),
+                      ("Vulnerability disclosure", "/security/disclosure/")])]),
+         templates.disclosure_page(site), None,
+         {"path": "/security/disclosure/", "changefreq": "yearly", "priority": "0.4"})
+
+    # RFC 9116. Must be served from /.well-known/ and reference a policy URL.
+    write(os.path.join(BUILD, ".well-known", "security.txt"),
+          "Contact: mailto:%s\n"
+          "Expires: %s\n"
+          "Policy: %s/security/disclosure/\n"
+          "Preferred-Languages: en\n"
+          "Canonical: %s/.well-known/security.txt\n"
+          % (site.get("email", ""), site.get("securityTxtExpires", ""),
+             site["baseUrl"], site["baseUrl"]))
+
     index = []
     for p in listed:
         index.append({"t": p["title"], "h": p["url"], "ty": "Insight",
@@ -391,22 +421,25 @@ def main():
     for r in open_roles:
         index.append({"t": r["title"], "h": r["url"], "ty": "Role", "s": r["team"],
                       "k": " ".join([r["team"], r["location"], r["employmentType"]])})
-    pages_yml = os.path.join(CONTENT, "pages.yml")
-    if os.path.exists(pages_yml):
-        for entry in load_yaml(pages_yml) or []:
-            index.append({"t": entry["title"], "h": entry["href"], "ty": "Page",
-                          "s": "", "k": entry.get("keywords", "")})
+    for entry in PAGES:
+        index.append({"t": entry["title"], "h": entry["path"], "ty": "Page",
+                      "s": "", "k": entry.get("keywords", "")})
     write(os.path.join(data_dir, "search-index.json"),
           json.dumps({"v": 1, "items": index}, ensure_ascii=False, indent=1))
 
     write(os.path.join(BUILD, "insights", "rss.xml"), feeds.rss(site, listed[:20]))
 
-    for path in ("/", "/services.html", "/service-vapt.html", "/service-ai-security.html",
-                 "/vapt-methodology.html", "/sebi-cscrf.html", "/dpdp-readiness.html",
-                 "/industries.html", "/about.html", "/careers.html", "/contact.html"):
-        sitemap_entries.insert(0 if path == "/" else len(sitemap_entries),
-                               {"path": path, "changefreq": "monthly",
-                                "priority": "1.0" if path == "/" else "0.6"})
+    # The hand-maintained pages come from content/pages.yml — the same list the
+    # search index and apply-page-seo.py read, so a page can't be live but
+    # missing from the sitemap.
+    hand_entries = []
+    for entry in PAGES:
+        if entry.get("generated"):
+            continue  # already emitted above with its own sitemap entry
+        hand_entries.append({"path": entry["path"],
+                             "changefreq": entry.get("changefreq", "monthly"),
+                             "priority": entry.get("priority", "0.5")})
+    sitemap_entries = hand_entries + sitemap_entries
     write(os.path.join(BUILD, "sitemap.xml"), feeds.sitemap(site, sitemap_entries))
 
     print("build/ — %d pages, %d sitemap entries, %d search items"

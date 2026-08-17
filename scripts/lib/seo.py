@@ -91,6 +91,92 @@ def organization(site):
     }
 
 
+def website(site):
+    """WebSite + SearchAction.
+
+    The SearchAction target must be a real page that renders results for ?q=.
+    It points at /search/, which the build generates — before that existed,
+    pressing Enter in site search sent every visitor to the jobs board
+    regardless of what they typed.
+    """
+    return {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": site["baseUrl"] + "/#website",
+        "url": site["baseUrl"] + "/",
+        "name": site["name"],
+        "publisher": {"@id": site["baseUrl"] + "/#organization"},
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": {"@type": "EntryPoint",
+                       "urlTemplate": site["baseUrl"] + "/search/?q={search_term_string}"},
+            "query-input": "required name=search_term_string",
+        },
+    }
+
+
+def service(site, name, description, url, service_type=None):
+    return {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": name,
+        "serviceType": service_type or name,
+        "description": description,
+        "url": url,
+        "provider": {"@id": site["baseUrl"] + "/#organization"},
+        "areaServed": [{"@type": "Country", "name": c}
+                       for c in ("India", "Qatar", "United States")],
+    }
+
+
+def local_businesses(site):
+    """One LocalBusiness per office.
+
+    Street addresses are NOT on the site — contact.html lists city and
+    timezone only — so addressLocality/addressCountry are all that can honestly
+    be asserted. Google tolerates a partial PostalAddress; inventing a street
+    to fill the schema would be worse than omitting it.
+    """
+    out = []
+    for office in site.get("offices", []):
+        out.append({
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "@id": "%s/#office-%s" % (site["baseUrl"], office["city"].lower().replace(" ", "-")),
+            "name": "%s — %s" % (site["name"], office["city"]),
+            "parentOrganization": {"@id": site["baseUrl"] + "/#organization"},
+            "url": site["baseUrl"] + "/contact.html",
+            "telephone": site.get("phone"),
+            "email": site.get("email"),
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": office["city"],
+                "addressRegion": office.get("region"),
+                "addressCountry": office["country"],
+            },
+        })
+    return out
+
+
+def faq_page(qa_pairs):
+    """FAQPage from the question/answer pairs already on the page.
+
+    Only ever built from real on-page content: Google requires the marked-up
+    answer to be visible to the user, and a mismatch is a manual-action risk.
+    """
+    if not qa_pairs:
+        return None
+    return {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": q,
+             "acceptedAnswer": {"@type": "Answer", "text": a}}
+            for q, a in qa_pairs
+        ],
+    }
+
+
 def breadcrumbs(site, trail):
     """trail: [(name, path), ...] ending with the current page."""
     return {

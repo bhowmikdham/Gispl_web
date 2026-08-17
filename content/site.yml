@@ -18,11 +18,20 @@ description: >-
   DPDP readiness, managed security and cyber forensics across India, the Middle
   East and the US.
 
-# Mail runs on a different domain to the website; SPF/DKIM/DMARC belong on
-# gisconsulting.in, not gispl.co.
-email: "info@gisconsulting.in"
-careersEmail: "careers@gisconsulting.in"
+# Mail runs on a DIFFERENT domain to the website. The target is
+# gisconsulting.in — SPF/DKIM/DMARC belong there, not on gispl.co — but the
+# addresses below stay @gispl.com until that mailbox is confirmed live.
+# Advertising an address that doesn't receive mail loses leads outright, which
+# is worse than the domain mismatch. Switch here and sweep the hand-written
+# pages in the same commit; they must never disagree.
+email: "info@gispl.com"
+careersEmail: "careers@gispl.com"
 phone: "+91 124 401 0000"
+
+# RFC 9116 requires an Expires field on security.txt, and treats the file as
+# invalid past that date. Set deliberately rather than computed from build time
+# (which would churn the file on every build); review it annually.
+securityTxtExpires: "2027-08-17T00:00:00.000Z"
 
 logo: "/assets/images/gispl-logo-ondark.png"
 defaultOgImage: "/assets/images/og-default.png"

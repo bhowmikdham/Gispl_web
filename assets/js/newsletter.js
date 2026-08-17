@@ -20,13 +20,13 @@
       if (input) input.focus();
       return;
     }
-    var href = "mailto:info@gisconsulting.in" +
+    var href = "mailto:info@gispl.com" +
       "?subject=" + encodeURIComponent("Subscribe to GISPL insights") +
       "&body=" + encodeURIComponent(
         "Please add " + email + " to the GISPL insights mailing list.\n");
     if (note) {
       note.textContent = "Your email app should have opened — press send there " +
-        "to confirm. If it didn't, write to info@gisconsulting.in.";
+        "to confirm. If it didn't, write to info@gispl.com.";
       note.style.display = "block";
     }
     location.href = href;

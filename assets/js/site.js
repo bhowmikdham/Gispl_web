@@ -56,9 +56,25 @@
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }
 
-  // items with a dedicated page deep-link to it; everything else goes to the services overview
-  var ITEM_HREFS = { "VAPT services": "service-vapt.html", "AI & LLM security testing": "service-ai-security.html" };
-  function itemHref(x) { return ITEM_HREFS[x] || "services.html"; }
+  /* Items with a dedicated page deep-link to it. The other 37 used to fall
+     through to a bare "services.html" — the top of a long page, with no anchor
+     for the capability the visitor clicked and nothing selected. They now open
+     the matching category in the capability explorer (services.js reads the
+     hash), so a two-click path ends somewhere relevant. */
+  var ITEM_HREFS = {
+    "VAPT services": "service-vapt.html",
+    "AI & LLM security testing": "service-ai-security.html",
+    "Data Protection Act": "dpdp-readiness.html"
+  };
+  var ITEM_CATEGORY = {};
+  SVC.forEach(function (c, i) {
+    c.items.forEach(function (item) { ITEM_CATEGORY[item] = i; });
+  });
+  function itemHref(x) {
+    if (ITEM_HREFS[x]) return ITEM_HREFS[x];
+    var i = ITEM_CATEGORY[x];
+    return i === undefined ? "services.html" : "services.html#capability-" + i;
+  }
 
   /* ---- Services mega-menu ---- */
   function paintRow(el, on) {
@@ -170,20 +186,10 @@
       .then(onReady, onReady);
   }
 
-  function wordsOf(s) { return String(s).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean); }
-  // word-prefix matching: "pen" hits "penetration"/"pentest", never "open"/"opening"
-  function scoreEntry(e, words) {
-    if (!e._tw) { e._tw = wordsOf(e.t); e._kw = wordsOf((e.kw || "") + " " + (e.sub || "")); }
-    var s = 0;
-    for (var i = 0; i < words.length; i++) {
-      var w = words[i], m = 0, j;
-      for (j = 0; j < e._tw.length; j++) if (e._tw[j].indexOf(w) === 0) { m = (j === 0 ? 4 : 3); break; }
-      if (!m) for (j = 0; j < e._kw.length; j++) if (e._kw[j].indexOf(w) === 0) { m = 1; break; }
-      if (!m) return 0; // every query word must match somewhere
-      s += m;
-    }
-    return s;
-  }
+  // Scoring lives in search-core.js, shared with the /search/ results page so
+  // the dropdown and the full results list can never rank a query differently.
+  var wordsOf = GISPLSearch.wordsOf;
+  var scoreEntry = GISPLSearch.score;
   function searchAll(q) {
     var words = q.toLowerCase().split(/\s+/).filter(function (w) { return w.length >= 2; });
     if (!words.length) return [];
@@ -214,7 +220,7 @@
       + '<span style="flex:none;font:500 9px \'IBM Plex Mono\';letter-spacing:.14em;color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.18);padding:3px 8px;border-radius:12px">' + e.type.toUpperCase() + "</span></a>";
   }
   function footHTML(q) {
-    return '<a href="roles.html?q=' + encodeURIComponent(q) + '" style="display:block;padding:12px 16px;text-decoration:none;font:600 13px \'IBM Plex Sans\';color:#F26A21;border-top:1px solid rgba(255,255,255,.1)">Search open roles for &ldquo;' + esc(q) + '&rdquo; &rarr;</a>';
+    return '<a href="' + GISPLSearch.resultsUrl(q) + '" style="display:block;padding:12px 16px;text-decoration:none;font:600 13px \'IBM Plex Sans\';color:#F26A21;border-top:1px solid rgba(255,255,255,.1)">See all results for &ldquo;' + esc(q) + '&rdquo; &rarr;</a>';
   }
 
   // wires live search onto an input; mountFn places the results panel, hooks = {onEscape, onOpen}
@@ -266,7 +272,7 @@
         var href = null;
         if (open && active >= 0 && results[active]) href = results[active].href;
         else if (open && results.length) href = results[0].href;
-        else if (input.value.trim()) href = "roles.html?q=" + encodeURIComponent(input.value.trim());
+        else if (input.value.trim()) href = GISPLSearch.resultsUrl(input.value.trim());
         if (href) location.href = href;
       } else if (e.key === "Escape") { close(); if (hooks.onEscape) hooks.onEscape(); }
     });

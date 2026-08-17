@@ -185,6 +185,93 @@ select.rl-sel{border:none;outline:none;background:transparent;font:600 15px 'IBM
 """
 
 
+def search_page():
+    """/search/ — the results page site search never had.
+
+    Server-rendered shell with a real form and no-JS browse links; results are
+    filled in by search.js from the same index the header dropdown uses.
+    """
+    return (
+        '<main id="gx-main" style="background:#fff;min-height:70vh;padding:0 0 90px">'
+        '<div class="gx-in" style="padding-top:64px;padding-bottom:20px">'
+        '<h1 style="font:700 40px/1.1 Archivo;letter-spacing:-.02em;color:#0B1E3B;'
+        'margin:0 0 22px">Search</h1>'
+        '<form id="srchForm" role="search" style="display:flex;gap:10px;flex-wrap:wrap;'
+        'max-width:640px">'
+        '<label for="srchInput" style="position:absolute;width:1px;height:1px;'
+        'overflow:hidden;clip:rect(0 0 0 0)">Search the site</label>'
+        '<input id="srchInput" name="q" type="search" placeholder="Search services, '
+        'insights and roles…" style="flex:1 1 300px;border:1px solid rgba(11,30,59,.2);'
+        'border-radius:9px;padding:14px 16px;font:400 16px %s;color:#0B1E3B;outline:none" />'
+        '<button type="submit" style="border:none;cursor:pointer;background:#F26A21;'
+        'color:#fff;font:600 15px %s;padding:14px 26px;border-radius:9px">Search</button>'
+        "</form>"
+        '<p id="srchSummary" aria-live="polite" style="font:500 12px %s;'
+        'letter-spacing:.1em;color:#8A92A4;margin:22px 0 0;text-transform:uppercase"></p>'
+        "</div>"
+        '<div class="gx-in"><div id="srchResults"></div>'
+        '<noscript><p style="font:400 16px/1.7 %s;color:#5B647C">'
+        'Search needs JavaScript. Browse '
+        '<a href="/services.html" style="color:#C4632A">services</a>, '
+        '<a href="/insights/" style="color:#C4632A">insights</a> or '
+        '<a href="/careers/roles/" style="color:#C4632A">open roles</a> instead.'
+        "</p></noscript></div></main>"
+        % (SANS, SANS, MONO, SANS)
+    )
+
+
+def disclosure_page(site):
+    """Vulnerability disclosure policy.
+
+    A security consultancy with no way to report a vulnerability in its own
+    site is a conspicuous gap — and security.txt (RFC 9116) requires a policy
+    URL to point at.
+    """
+    email = site.get("email", "")
+    return (
+        '<main id="gx-main" class="gx-prose" style="background:#fff;min-height:70vh;'
+        'padding:0 0 90px"><div class="gx-in" style="padding-top:64px;max-width:760px">'
+        '<h1 style="font:700 40px/1.15 Archivo;letter-spacing:-.02em;color:#0B1E3B;'
+        'margin:0 0 20px">Vulnerability disclosure policy</h1>'
+        '<div style="font:400 17px/1.8 %s;color:#33405C">'
+        "<p>We welcome reports of security issues in this website and our public "
+        "services. If you believe you have found a vulnerability, tell us before "
+        "you tell anyone else and we will work with you.</p>"
+        "<h2>How to report</h2>"
+        '<p>Email <a href="mailto:%s">%s</a> with the subject line '
+        "<strong>Security disclosure</strong>. Include the affected URL or "
+        "endpoint, the steps to reproduce, and what you believe the impact is. "
+        "A proof of concept helps.</p>"
+        "<h2>What we commit to</h2>"
+        "<ul>"
+        "<li>We acknowledge reports within <strong>3 business days</strong>.</li>"
+        "<li>We give you an assessment and a remediation timeline within "
+        "<strong>10 business days</strong>.</li>"
+        "<li>We will credit you when the issue is resolved, if you would like that.</li>"
+        "</ul>"
+        "<h2>Safe harbour</h2>"
+        "<p>We will not pursue or support legal action against researchers who "
+        "act in good faith under this policy: who make a reasonable effort to "
+        "avoid harm to our users and data, who do not access or modify data "
+        "belonging to others, and who give us reasonable time to remediate "
+        "before disclosing publicly.</p>"
+        "<h2>Out of scope</h2>"
+        "<ul>"
+        "<li>Denial-of-service, volumetric or resource-exhaustion testing.</li>"
+        "<li>Social engineering of our staff, clients or suppliers.</li>"
+        "<li>Physical attacks against our offices or personnel.</li>"
+        "<li>Reports generated solely by an automated scanner, with no "
+        "demonstrated impact.</li>"
+        "<li>Findings in our clients' systems — report those to the client, not "
+        "to us.</li>"
+        "</ul>"
+        "<h2>Not a bug bounty</h2>"
+        "<p>We do not currently operate a paid bounty programme. We are grateful "
+        "for reports regardless, and we will say so publicly.</p>"
+        "</div></div></main>" % (SANS, esc(email), esc(email))
+    )
+
+
 def role_row(role):
     """One row in the roles list — ported byte-for-byte from roles.js roleRow()
     so the static rows and the JS-filtered rows are indistinguishable."""

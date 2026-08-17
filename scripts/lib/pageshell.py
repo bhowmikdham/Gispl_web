@@ -94,6 +94,7 @@ class Shell(object):
 
 
 _HEAD = re.compile(r"<head[^>]*>(.*?)</head>", re.S | re.I)
+_SCRIPT = re.compile(r'<script src="assets/js/[^"]+"[^>]*></script>')
 # Shared head lines worth inheriting; per-page title/description/og are not.
 _INHERIT = re.compile(
     r'<link[^>]+rel="(?:preconnect|stylesheet|icon)"[^>]*>'
@@ -144,7 +145,19 @@ def donor_shell(root, pages=None):
     head_links = ([m.group(0) for m in _INHERIT.finditer(head_m.group(1))]
                   if head_m else [])
 
-    scripts = re.findall(r'<script src="assets/js/site\.js"[^>]*></script>', donor)
+    # Shared scripts = the ones EVERY hand-maintained page loads, in the donor's
+    # order. Derived rather than hardcoded so adding a sitewide script to the
+    # pages is enough — order matters here (search-core.js defines GISPLSearch,
+    # which site.js reads at definition time).
+    def page_scripts(html):
+        return _SCRIPT.findall(html)
+
+    common = None
+    for html in sources.values():
+        found = set(page_scripts(html))
+        common = found if common is None else (common & found)
+    scripts = [tag for tag in page_scripts(donor) if tag in (common or set())]
+
     return Shell(header, footer, head_links, scripts)
 
 
