@@ -76,8 +76,34 @@ def head(site, *, title, description, path, og_type="website", image=None,
 
 # ------------------------------------------------------------------ JSON-LD
 
+def postal_address(office):
+    """PostalAddress for an office, omitting parts the site does not state.
+
+    A partial address is fine; an invented one is not. Every value here has to
+    be visible on contact.html — see content/site.yml.
+    """
+    addr = {"@type": "PostalAddress", "addressLocality": office["city"],
+            "addressCountry": office["country"]}
+    if office.get("street"):
+        addr["streetAddress"] = office["street"]
+    if office.get("region"):
+        addr["addressRegion"] = office["region"]
+    if office.get("postalCode"):
+        addr["postalCode"] = office["postalCode"]
+    return addr
+
+
 def organization(site):
-    return {
+    """Organization — the block that feeds Google's Knowledge Panel.
+
+    Everything asserted here is also stated on the site itself. That is not a
+    style preference: structured data contradicting the visible page is a
+    manual-action risk, and this block is the most brand-visible markup we emit.
+    """
+    offices = site.get("offices", [])
+    hq = next((o for o in offices if o.get("hq")), offices[0] if offices else None)
+
+    org = {
         "@context": "https://schema.org",
         "@type": "Organization",
         "@id": site["baseUrl"] + "/#organization",
@@ -89,6 +115,36 @@ def organization(site):
         "email": site.get("email"),
         "telephone": site.get("phone"),
     }
+    if site.get("foundingDate"):
+        org["foundingDate"] = site["foundingDate"]
+    if site.get("founder"):
+        org["founder"] = {"@type": "Person", "name": site["founder"]}
+    if hq:
+        org["address"] = postal_address(hq)
+    if offices:
+        org["areaServed"] = [{"@type": "Country", "name": COUNTRY_NAMES.get(o["country"], o["country"])}
+                             for o in dedupe_countries(offices)]
+    if site.get("awards"):
+        org["award"] = list(site["awards"])
+    return org
+
+
+COUNTRY_NAMES = {
+    "IN": "India", "AE": "United Arab Emirates", "US": "United States",
+    "CA": "Canada", "AU": "Australia",
+}
+
+
+def dedupe_countries(offices):
+    """One entry per country, in office order — two offices in one country
+    must not produce the same areaServed twice."""
+    seen, out = set(), []
+    for o in offices:
+        if o["country"] in seen:
+            continue
+        seen.add(o["country"])
+        out.append(o)
+    return out
 
 
 def website(site):
@@ -124,18 +180,18 @@ def service(site, name, description, url, service_type=None):
         "description": description,
         "url": url,
         "provider": {"@id": site["baseUrl"] + "/#organization"},
-        "areaServed": [{"@type": "Country", "name": c}
-                       for c in ("India", "Qatar", "United States")],
+        # Derived from the office list, not a hard-coded trio — that one still
+        # said "Qatar" long after the Doha office turned out not to exist.
+        "areaServed": [{"@type": "Country", "name": COUNTRY_NAMES.get(o["country"], o["country"])}
+                       for o in dedupe_countries(site.get("offices", []))],
     }
 
 
 def local_businesses(site):
-    """One LocalBusiness per office.
+    """One LocalBusiness per office, built from the addresses contact.html shows.
 
-    Street addresses are NOT on the site — contact.html lists city and
-    timezone only — so addressLocality/addressCountry are all that can honestly
-    be asserted. Google tolerates a partial PostalAddress; inventing a street
-    to fill the schema would be worse than omitting it.
+    Each office carries its own local number; falling back to the head-office
+    line would tell a Dubai searcher to dial an India toll-free number.
     """
     out = []
     for office in site.get("offices", []):
@@ -146,14 +202,9 @@ def local_businesses(site):
             "name": "%s — %s" % (site["name"], office["city"]),
             "parentOrganization": {"@id": site["baseUrl"] + "/#organization"},
             "url": site["baseUrl"] + "/contact.html",
-            "telephone": site.get("phone"),
+            "telephone": office.get("phone") or site.get("phone"),
             "email": site.get("email"),
-            "address": {
-                "@type": "PostalAddress",
-                "addressLocality": office["city"],
-                "addressRegion": office.get("region"),
-                "addressCountry": office["country"],
-            },
+            "address": postal_address(office),
         })
     return out
 
