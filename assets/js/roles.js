@@ -30,29 +30,29 @@
       if (state.loc !== "All") p.set("loc", state.loc);
       if (state.type !== "All") p.set("type", state.type);
       var qs = p.toString();
-      history.replaceState(null, "", "roles.html" + (qs ? "?" + qs : ""));
+      history.replaceState(null, "", location.pathname + (qs ? "?" + qs : ""));
     } catch (e) { /* no-op */ }
   }
 
   function roleRow(r) {
-    var href = r.slug ? "job.html?slug=" + encodeURIComponent(r.slug) : "#";
+    var href = r.url || (r.slug ? "../roles/" + encodeURIComponent(r.slug) + "/" : "#");
     return '<a href="' + href + '" class="gx-role-row" style="text-decoration:none;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:22px 26px;border-bottom:1px solid rgba(11,30,59,.09)">'
       + '<div style="display:flex;flex-direction:column;gap:6px;flex:1 1 240px;min-width:0">'
       + '<span style="font:600 19px Archivo;color:#0B1E3B">' + esc(r.title) + "</span>"
       + '<span style="font:500 11px \'IBM Plex Mono\';letter-spacing:.12em;color:#C4632A">' + esc(r.team) + "</span></div>"
       + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-      + '<span style="font:500 11px \'IBM Plex Mono\';letter-spacing:.06em;color:#5B647C;border:1px solid rgba(11,30,59,.14);padding:6px 12px;border-radius:20px;white-space:nowrap">' + esc(r.loc) + "</span>"
-      + '<span style="font:500 11px \'IBM Plex Mono\';letter-spacing:.06em;color:#5B647C;border:1px solid rgba(11,30,59,.14);padding:6px 12px;border-radius:20px;white-space:nowrap">' + esc(r.type) + "</span>"
+      + '<span style="font:500 11px \'IBM Plex Mono\';letter-spacing:.06em;color:#5B647C;border:1px solid rgba(11,30,59,.14);padding:6px 12px;border-radius:20px;white-space:nowrap">' + esc(r.location) + "</span>"
+      + '<span style="font:500 11px \'IBM Plex Mono\';letter-spacing:.06em;color:#5B647C;border:1px solid rgba(11,30,59,.14);padding:6px 12px;border-radius:20px;white-space:nowrap">' + esc(r.employmentType) + "</span>"
       + '<span style="font:600 14px \'IBM Plex Sans\';color:#F26A21;display:inline-flex;align-items:center;gap:6px;margin-left:6px">View role <span style="font-size:15px">&rarr;</span></span>'
       + "</div></a>";
   }
 
   function matches(r) {
     if (state.team !== "All" && r.team !== state.team) return false;
-    if (state.loc !== "All" && (r.loc || "").indexOf(state.loc) === -1) return false;
-    if (state.type !== "All" && r.type !== state.type) return false;
+    if (state.loc !== "All" && (r.location || "").indexOf(state.loc) === -1) return false;
+    if (state.type !== "All" && r.employmentType !== state.type) return false;
     if (state.q) {
-      var hay = (r.title + " " + r.team + " " + r.loc + " " + r.type + " " + (r.descriptionMd || "")).toLowerCase();
+      var hay = (r.title + " " + r.team + " " + r.location + " " + r.employmentType + " " + (r.searchText || "")).toLowerCase();
       if (hay.indexOf(state.q.trim().toLowerCase()) === -1) return false;
     }
     return true;
@@ -142,13 +142,15 @@
   readURL();
   wire();
   statusMsg("Loading open roles…");
-  GISPL.data.list("jobs").then(function (jobs) {
+  fetch((window.GX_ROOT || "/") + "assets/data/roles.json")
+    .then(function (r) { if (!r.ok) throw new Error("roles.json " + r.status); return r.json(); })
+    .then(function (jobs) {
     ROLES = jobs.slice().sort(function (a, b) { // newest first, independent of seed order
       return (b.createdAt || "").localeCompare(a.createdAt || "");
     });
-    fillSelect(byId("rloc"), uniq(jobs.map(function (r) { return r.loc; })).sort(), "All locations");
+    fillSelect(byId("rloc"), uniq(jobs.map(function (r) { return r.location; })).sort(), "All locations");
     fillSelect(byId("rteam"), uniq(jobs.map(function (r) { return r.team; })).sort(), "All teams");
-    fillSelect(byId("rtype"), uniq(jobs.map(function (r) { return r.type; })).sort(), "All types");
+    fillSelect(byId("rtype"), uniq(jobs.map(function (r) { return r.employmentType; })).sort(), "All types");
     buildTeamChips(uniq(jobs.map(function (r) { return r.team; })).sort());
     syncControls();
     render();

@@ -6,15 +6,17 @@ static export lands in portal/out/. This script stages both into dist/ so
 the whole thing can be uploaded as-is (later: `aws s3 sync dist/ ...`):
 
     dist/
-      *.html  assets/  robots.txt  favicon…      (the public site)
+      *.html  assets/  robots.txt  favicon…      (the hand-written pages)
+      insights/**  careers/**  sitemap.xml       (build/ — generated content)
       portal/**                                   (portal/out/ contents)
 
 The portal is served at /portal/ (its next.config.ts sets basePath:'/portal').
 admin.html is intentionally EXCLUDED from dist/ — it is a dev-only tool.
 
 Usage:
-    cd portal && npm run build     # produces portal/out/
-    cd ..     && python3 scripts/build-dist.py
+    cd portal && npm run build                    # produces portal/out/
+    cd ..     && .venv/bin/python scripts/build-content.py   # produces build/
+              && python3 scripts/build-dist.py
 """
 import os
 import shutil
@@ -23,6 +25,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "dist")
 PORTAL_OUT = os.path.join(ROOT, "portal", "out")
+CONTENT_BUILD = os.path.join(ROOT, "build")
 
 # Root files/dirs to publish. admin.html is deliberately omitted.
 INCLUDE_FILES = ["robots.txt"]
@@ -36,6 +39,14 @@ EXCLUDE_ASSETS = {"admin.js"}
 def main() -> int:
     if not os.path.isdir(PORTAL_OUT):
         print("ERROR: portal/out/ missing. Run `cd portal && npm run build` first.", file=sys.stderr)
+        return 1
+
+    # The generated pages ARE the insights and careers sections now. Shipping
+    # without them would serve a site whose nav links all 404, so this is a
+    # hard error rather than a warning.
+    if not os.path.isdir(CONTENT_BUILD):
+        print("ERROR: build/ missing — the insights and careers pages live there.\n"
+              "  Run: .venv/bin/python scripts/build-content.py", file=sys.stderr)
         return 1
 
     # portal/out must be newer than portal/src, or the export is stale
@@ -69,9 +80,17 @@ def main() -> int:
             shutil.copytree(p, os.path.join(DIST, d),
                             ignore=shutil.ignore_patterns(*EXCLUDE_ASSETS))
 
+    # Overlay the generated content tree. dirs_exist_ok merges build/assets/data
+    # into the assets/ already copied above rather than replacing it.
+    shutil.copytree(CONTENT_BUILD, DIST, dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns("*.pyc"))
+    n_gen = sum(1 for dp, _, fs in os.walk(CONTENT_BUILD) for f in fs
+                if f.endswith(".html"))
+
     shutil.copytree(PORTAL_OUT, os.path.join(DIST, "portal"))
 
-    print(f"dist/ assembled: {n_html} site pages + assets + portal/ (excluded admin.html)")
+    print(f"dist/ assembled: {n_html} hand-written pages + {n_gen} generated "
+          f"+ assets + portal/")
     print(f"  → {DIST}")
     print("Serve locally:  python3 -m http.server 8080 -d dist")
     return 0

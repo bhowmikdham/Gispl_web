@@ -27,6 +27,23 @@
   })();
   window.GX_ROOT = GX_ROOT;
 
+  /* One-release cleanup of the retired localStorage content layer.
+     Content used to be seeded into localStorage once, gated by
+     gispl:seeded:v1 — which is why a redeployed posts.json never reached a
+     returning visitor. Content is static HTML now and nothing reads these
+     keys, but every past visitor still carries ~40 KB of stale copies.
+     gispl:applications matters most: it held submitted job applications with
+     the CV base64-encoded, unencrypted, on the candidate's own machine.
+     Remove after one release. */
+  (function () {
+    try {
+      ["gispl:jobs", "gispl:posts", "gispl:seeded:v1", "gispl:applications",
+       "gispl:templates", "gispl:admin-session"].forEach(function (k) {
+        localStorage.removeItem(k);
+      });
+    } catch (e) { /* storage disabled or partitioned — nothing to clean */ }
+  })();
+
   // Shared services taxonomy — drives the Services mega-menu on every page.
   var SVC = [
     { name: "Compliance & certification", blurb: "Certify to the standards your customers, regulators and boards expect.", items: ["PCI DSS", "HIPAA", "SOC 1 & SOC 2", "GDPR", "RBI compliance (NBFC)", "Data Protection Act", "ISO standards"] },
@@ -129,23 +146,28 @@
     });
   });
 
-  // jobs + posts come from the data provider (config.js); fetched once, on first keystroke
-  var dynState = { started: false, jobs: [], posts: [] };
+  /* Jobs + posts come from a build-time index (assets/data/search-index.json),
+     fetched once on the first keystroke.
+
+     It used to come from the localStorage data provider, which meant search
+     results were whatever that browser happened to have seeded — and a page
+     that didn't load config.js had no roles or insights in search at all.
+     A generated index is the same for every visitor and cannot go stale
+     against the pages it points at, because the same build emits both. */
+  var dynState = { started: false, items: [] };
   function loadDynamic(onReady) {
-    if (dynState.started || !(window.GISPL && GISPL.data)) { onReady(); return; }
+    if (dynState.started) { onReady(); return; }
     dynState.started = true;
-    var done = 0;
-    function fin() { done++; if (done === 2) onReady(); }
-    GISPL.data.list("jobs").then(function (jobs) {
-      dynState.jobs = jobs.map(function (j) {
-        return { t: j.title, href: "job.html?slug=" + encodeURIComponent(j.slug), type: "Role", sub: (j.team || "") + " · " + (j.loc || ""), kw: ((j.team || "") + " " + (j.loc || "") + " " + (j.type || "") + " job role opening position vacancy").toLowerCase() };
-      });
-    }).catch(function () {}).then(fin);
-    GISPL.data.list("posts").then(function (posts) {
-      dynState.posts = posts.map(function (p) {
-        return { t: p.title, href: "article.html?slug=" + encodeURIComponent(p.slug), type: "Insight", sub: p.category || "", kw: ((p.category || "") + " " + (p.excerpt || "") + " article insight blog").toLowerCase() };
-      });
-    }).catch(function () {}).then(fin);
+    fetch((window.GX_ROOT || "/") + "assets/data/search-index.json")
+      .then(function (r) { return r.ok ? r.json() : { items: [] }; })
+      .then(function (data) {
+        dynState.items = (data.items || []).map(function (it) {
+          return { t: it.t, href: it.h, type: it.ty, sub: it.s || "",
+                   kw: ((it.k || "") + " " + (it.s || "")).toLowerCase() };
+        });
+      })
+      .catch(function () { /* search still works over the static entries */ })
+      .then(onReady, onReady);
   }
 
   function wordsOf(s) { return String(s).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean); }
@@ -165,7 +187,7 @@
   function searchAll(q) {
     var words = q.toLowerCase().split(/\s+/).filter(function (w) { return w.length >= 2; });
     if (!words.length) return [];
-    var all = SEARCH_STATIC.concat(dynState.jobs, dynState.posts), out = [];
+    var all = SEARCH_STATIC.concat(dynState.items), out = [];
     each(all, function (e) { var s = scoreEntry(e, words); if (s) out.push({ e: e, s: s }); });
     out.sort(function (a, b) { return b.s - a.s || (a.e.t < b.e.t ? -1 : 1); });
     return out.slice(0, 9).map(function (x) { return x.e; });

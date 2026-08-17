@@ -93,11 +93,12 @@ def write(path, text):
         fh.write(text)
 
 
-def page(shell, site, head_html, body_html, nav_href, prefix):
+def page(shell, site, head_html, body_html, nav_href, prefix, extra_scripts=()):
     """Assemble a full page from the donor shell plus a rendered body."""
     header = activate(shell.header, nav_href)
     inherited = "\n".join(shell.head_links)
-    scripts = "\n".join(shell.scripts)
+    scripts = "\n".join(list(shell.scripts) + [
+        '<script src="assets/js/%s" defer></script>' % name for name in extra_scripts])
     html = (
         "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n%s\n%s\n</head>\n<body>\n"
         '<a class="gx-skip" href="#gx-main">Skip to content</a>\n'
@@ -229,9 +230,9 @@ def main():
     sitemap_entries = []
     n = {"pages": 0}
 
-    def emit(path_url, head_html, body_html, nav, sitemap=None):
+    def emit(path_url, head_html, body_html, nav, sitemap=None, scripts=()):
         out = os.path.join(BUILD, path_url.strip("/"), "index.html")
-        write(out, page(shell, site, head_html, body_html, nav, prefix))
+        write(out, page(shell, site, head_html, body_html, nav, prefix, scripts))
         n["pages"] += 1
         if sitemap:
             sitemap_entries.append(sitemap)
@@ -248,7 +249,8 @@ def main():
          templates.insights_index(site, listed, list(categories.values()),
                                   base="/insights/"),
          NAV_INSIGHTS,
-         {"path": "/insights/", "changefreq": "weekly", "priority": "0.8"})
+         {"path": "/insights/", "changefreq": "weekly", "priority": "0.8"},
+         scripts=["newsletter.js"])
 
     # ------------------------------------------------------- article pages
     for post in posts:
@@ -302,7 +304,8 @@ def main():
                                       base="/insights/"),
              NAV_INSIGHTS,
              {"path": "/insights/category/%s/" % slug, "changefreq": "weekly",
-              "priority": "0.5"} if in_cat else None)
+              "priority": "0.5"} if in_cat else None,
+             scripts=["newsletter.js"])
 
     # -------------------------------------------------------- author pages
     for slug, author in sorted(authors.items()):
@@ -323,7 +326,8 @@ def main():
                                       base="/insights/"),
              NAV_INSIGHTS,
              {"path": "/insights/author/%s/" % slug, "changefreq": "monthly",
-              "priority": "0.3"} if by else None)
+              "priority": "0.3"} if by else None,
+             scripts=["newsletter.js"])
 
     # --------------------------------------------------------- roles board
     teams = sorted(set(r["team"] for r in open_roles if r["team"]))
@@ -338,7 +342,8 @@ def main():
                                                  ("Open roles", "/careers/roles/")])]),
          templates.roles_index(site, open_roles, teams, locations, types),
          NAV_CAREERS,
-         {"path": "/careers/roles/", "changefreq": "daily", "priority": "0.8"})
+         {"path": "/careers/roles/", "changefreq": "daily", "priority": "0.8"},
+         scripts=["roles.js"])
 
     for role in roles:
         body_html, _ = markdown_render.render(role["body"])
@@ -361,7 +366,8 @@ def main():
              None if (role["noindex"] or role["archived"]) else
              {"path": "/careers/roles/%s/" % role["slug"],
               "lastmod": dates.iso_date(role["postedAt"]),
-              "changefreq": "weekly", "priority": "0.6"})
+              "changefreq": "weekly", "priority": "0.6"},
+             scripts=["apply.js"])
 
     # ------------------------------------------------------------- data + feeds
     data_dir = os.path.join(BUILD, "assets", "data")
