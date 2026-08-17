@@ -4,6 +4,29 @@
 (function () {
   "use strict";
 
+  /* Site root, derived from THIS script's own URL.
+     Pages used to live only at the root, so a relative "assets/js/…" always
+     resolved. Generated pages sit at /insights/<slug>/ and /careers/roles/<slug>/,
+     where the same string resolves to /insights/<slug>/assets/js/… and 404s.
+     A hardcoded "/assets/js/…" would fix that but break any deploy served from
+     a sub-path (GitHub Pages serves this repo under /Gispl_web/).
+     Reading it off the script tag handles both, with no build-time config. */
+  var GX_ROOT = (function () {
+    var el = document.currentScript;
+    if (!el) {
+      var all = document.getElementsByTagName("script");
+      for (var i = all.length - 1; i >= 0; i--) {
+        if (/\/assets\/js\/site\.js(\?|$)/.test(all[i].src || "")) { el = all[i]; break; }
+      }
+    }
+    if (el && el.src) {
+      var m = el.src.match(/^(.*\/)assets\/js\/site\.js(?:\?|$)/);
+      if (m) return m[1];
+    }
+    return "/";
+  })();
+  window.GX_ROOT = GX_ROOT;
+
   // Shared services taxonomy — drives the Services mega-menu on every page.
   var SVC = [
     { name: "Compliance & certification", blurb: "Certify to the standards your customers, regulators and boards expect.", items: ["PCI DSS", "HIPAA", "SOC 1 & SOC 2", "GDPR", "RBI compliance (NBFC)", "Data Protection Act", "ISO standards"] },
@@ -298,7 +321,7 @@
   (function () {
     if (window.__gxAssistant || document.getElementById("gxAiFab")) return;
     var s = document.createElement("script");
-    s.src = "assets/js/assistant.js";
+    s.src = GX_ROOT + "assets/js/assistant.js";
     s.defer = true;
     document.body.appendChild(s);
   })();

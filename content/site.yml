@@ -1,0 +1,52 @@
+# Single source for every absolute URL and organisation fact the build emits.
+#
+# Canonicals, og:url, sitemap entries and JSON-LD @id values all derive from
+# baseUrl. It exists in exactly one place so switching domains is one edit
+# rather than a sweep across every generated page.
+
+baseUrl: "https://gispl.co"
+
+# Bare host is canonical; www 301s to it (CloudFront function, Phase 9).
+canonicalHost: "gispl.co"
+
+name: "GISPL"
+legalName: "G-Info Technology Solutions Pvt. Ltd."
+siteName: "GISPL — G-Info Technology Solutions"
+tagline: "PROTECT · COMPLY · GROW"
+description: >-
+  CERT-IN certified information-security consulting — VAPT, ISO 27001, PCI DSS,
+  DPDP readiness, managed security and cyber forensics across India, the Middle
+  East and the US.
+
+# Mail runs on a different domain to the website; SPF/DKIM/DMARC belong on
+# gisconsulting.in, not gispl.co.
+email: "info@gisconsulting.in"
+careersEmail: "careers@gisconsulting.in"
+phone: "+91 124 401 0000"
+
+logo: "/assets/images/gispl-logo-ondark.png"
+defaultOgImage: "/assets/images/og-default.png"
+
+# Offices, for LocalBusiness JSON-LD (Phase 4). Street addresses are still
+# missing from the site — contact.html lists city and timezone only.
+offices:
+  - { city: "Gurgaon", region: "Haryana", country: "IN", timezone: "Asia/Kolkata" }
+  - { city: "New Delhi", region: "Delhi", country: "IN", timezone: "Asia/Kolkata" }
+  - { city: "Doha", region: "West Bay", country: "QA", timezone: "Asia/Qatar" }
+  - { city: "Maryland", region: "MD", country: "US", timezone: "America/New_York" }
+
+insights:
+  title: "Insights"
+  heading: "The thinking behind the"
+  headingAccent: "work"
+  intro: >-
+    Field notes, regulatory reads and hard-won lessons from the front line of
+    information security.
+  perPage: 12
+
+roles:
+  title: "Open roles"
+  heading: "Find your role at GISPL."
+  intro: >-
+    Search every open position across our Assessments, Compliance, Managed
+    Security and Forensics practices — then apply in minutes.
