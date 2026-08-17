@@ -28,5 +28,22 @@ data in localStorage) with an AWS seam (Cognito + API) that flips via env vars �
 - `next/font` bundles italic 500/600 Plex Sans that the site doesn't load — **don't style with
   those weights** or it faux-renders on the main site.
 - Deploy: `cd portal && npm run build` then `python3 scripts/build-dist.py` assembles `dist/`
-  (site + `portal/`, excludes `admin.html`). After editing the shared header on the 15 public
-  pages, `python3 scripts/check-header-sync.py` must pass.
+  (site + `portal/`, excludes `admin.html` and `assets/js/admin.js`). After editing the shared
+  header on the 15 public pages, `python3 scripts/check-header-sync.py` must pass.
+- The portal is served at `<site root>/portal/`. On a nested host (GitHub Pages serves this repo
+  under `/Gispl_web/`) set `NEXT_PUBLIC_SITE_BASE_PATH=/Gispl_web` — `portal/next.config.ts` and
+  `portal/src/lib/paths.ts` both read it and **must stay in step**; a mismatch silently 404s
+  assets that `asset()` builds while `next/link` URLs keep working.
+
+## Build scripts (`scripts/`)
+
+`scripts/lib/` holds shared helpers. `lib/pageshell.py` owns the single definition of the shared
+header/footer (the active-nav style pair, the skip list, the normalizer) — `check-header-sync.py`
+imports it so the guard and any future builder cannot disagree about what a correct header is.
+Content-pipeline deps are pinned in `requirements.txt` (`python3 -m venv .venv && .venv/bin/pip
+install -r requirements.txt`); the shipped site itself has zero runtime dependencies.
+
+**The external `shell.py` / `pages.py` builders are gone.** They used to re-emit `index.html`,
+`careers.html` and `services.html` from a session scratchpad outside the repo, and older notes
+warn about them clobbering hand-edits. Verified 2026-08-17: they no longer exist on disk. Those
+three pages — and all 15 public pages — are now hand-maintained. Edit them directly.
