@@ -1,0 +1,238 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  GISPL public site API — Lambda (Node 20, ESM) + HTTP API + DynamoDB single
+  table + SES v2 notifications + an S3 bucket for candidate CVs. Handles the
+  proposal form, the newsletter double opt-in and job applications.
+
+  Deployed SEPARATELY from portal-api on purpose: this stack is a public,
+  unauthenticated WRITE surface, and the portal stack is an authenticated
+  read-only one. Keeping them apart means abuse here cannot reach client data
+  there, and the portal keeps its read-only IAM policy.
+
+Parameters:
+  SiteSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 32
+    Description: >-
+      HMAC key for the double-opt-in confirmation and unsubscribe links. Must
+      NOT be the dev default ("dev-only-change-me") — src/config.js refuses to
+      start dynamo mode with it. Anyone holding this can forge a confirmed
+      opt-in, which is the evidence the consent record exists to provide.
+  SiteBase:
+    Type: String
+    Description: Public origin of the website, no trailing slash (e.g. https://www.example.com).
+  ApiBase:
+    Type: String
+    Default: ''
+    Description: >-
+      Public origin of THIS api, used to build the links that go out in email.
+      Leave blank on the first deploy, read ApiUrl from the outputs, then
+      redeploy with it set — or set it to "<SiteBase>/api" if a CDN routes
+      /api/* here. A wrong value produces confirmation links that 404.
+  CorsOrigin:
+    Type: String
+    Description: Origin allowed to post the forms (e.g. https://www.example.com). Avoid '*' in production.
+  MailFrom:
+    Type: String
+    Default: ''
+    Description: >-
+      SES-verified From address. Leave blank to run without email: submissions
+      are still stored, and the notification is written to CloudWatch instead.
+  MailLeadsTo:
+    Type: String
+    Default: info@gisconsulting.in
+    Description: Comma-separated recipients for proposal requests.
+  MailCareersTo:
+    Type: String
+    Default: careers@gisconsulting.in
+    Description: Comma-separated recipients for job applications.
+  PrivacyPolicyVersion:
+    Type: String
+    Default: '2026-08-17'
+    Description: Stamped into every consent record. Bump on a material privacy-policy change.
+  RetentionDays:
+    Type: Number
+    Default: 1095
+    Description: >-
+      Days a lead/application is kept before DynamoDB's TTL erases it. DPDP
+      s.8(7) requires erasure once the purpose is served.
+  RateMax:
+    Type: Number
+    Default: 5
+    Description: Submissions allowed per IP, per route, per window.
+  RateWindowSeconds:
+    Type: Number
+    Default: 3600
+    Description: Length of the rate-limit window in seconds.
+
+Conditions:
+  HasApiBase: !Not [!Equals [!Ref ApiBase, '']]
+
+Resources:
+  SiteTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AWS::StackName}-site'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        # Lets operations read leads/applications back in date order without a
+        # Scan. Nothing in the API queries it — it exists for the console, an
+        # export job or a future authenticated CRM view.
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  CvBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      # A CV is personal data with a purpose that expires. Matching the record
+      # retention keeps the bucket from becoming an indefinite CV archive.
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-applications
+            Status: Enabled
+            Prefix: applications/
+            ExpirationInDays: !Ref RetentionDays
+      CorsConfiguration:
+        # The browser POSTs the CV straight to S3 with the presigned policy.
+        CorsRules:
+          - AllowedOrigins: [!Ref CorsOrigin]
+            AllowedMethods: [POST]
+            AllowedHeaders: ['*']
+            MaxAge: 600
+
+  SiteHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref CorsOrigin
+        AllowHeaders:
+          - Content-Type
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        MaxAge: 600
+      # Defence in depth: the app rate-limits per IP, the stage caps the total.
+      # A distributed flood cannot run up an unbounded Lambda + SES bill.
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 20
+        ThrottlingRateLimit: 10
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # CodeUri is relative to this template (site-api/infra/) → package root.
+      CodeUri: ../
+      Handler: src/lambda.handler
+      Runtime: nodejs20.x
+      MemorySize: 256
+      Timeout: 15
+      Environment:
+        Variables:
+          STORE: dynamo
+          DDB_TABLE: !Ref SiteTable
+          UPLOAD_BUCKET: !Ref CvBucket
+          SITE_SECRET: !Ref SiteSecret
+          SITE_BASE: !Ref SiteBase
+          API_BASE: !If
+            - HasApiBase
+            - !Ref ApiBase
+            - !Sub 'https://${SiteHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+          CORS_ORIGINS: !Ref CorsOrigin
+          MAIL_FROM: !Ref MailFrom
+          MAIL_LEADS_TO: !Ref MailLeadsTo
+          MAIL_CAREERS_TO: !Ref MailCareersTo
+          PRIVACY_POLICY_VERSION: !Ref PrivacyPolicyVersion
+          RETENTION_DAYS: !Ref RetentionDays
+          RATE_MAX: !Ref RateMax
+          RATE_WINDOW_SECONDS: !Ref RateWindowSeconds
+      Policies:
+        - Statement:
+            # Exactly the four actions the store performs. No Scan, no Query,
+            # no Delete: the API writes leads and reads back only a single
+            # subscriber by key, so a bug here cannot enumerate the table.
+            - Sid: DynamoWriteAndPointRead
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+              Resource: !GetAtt SiteTable.Arn
+            # Presigned POSTs inherit the signer's permissions, so the function
+            # needs PutObject — scoped to the applications prefix only.
+            - Sid: S3PutCvOnly
+              Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource: !Sub '${CvBucket.Arn}/applications/*'
+            # Send only, and only as the address this stack was deployed with —
+            # a compromised function cannot send as any other verified identity
+            # in the account. With MailFrom blank the condition matches nothing,
+            # which is the same "no email" posture the code already takes.
+            - Sid: SesSendFromConfiguredAddressOnly
+              Effect: Allow
+              Action:
+                - ses:SendEmail
+              Resource: !Sub 'arn:${AWS::Partition}:ses:${AWS::Region}:${AWS::AccountId}:identity/*'
+              Condition:
+                StringEquals:
+                  ses:FromAddress: !Ref MailFrom
+      Events:
+        Proxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SiteHttpApi
+            Path: /{proxy+}
+            Method: ANY
+
+Outputs:
+  ApiUrl:
+    Description: >-
+      HTTP API endpoint. Put this in assets/js/api.js (or pass it to
+      scripts/build-dist.py --api-base) and redeploy with ApiBase set to it.
+    Value: !Sub 'https://${SiteHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+  TableName:
+    Description: DynamoDB table holding leads, applications and subscribers.
+    Value: !Ref SiteTable
+  CvBucketName:
+    Description: S3 bucket receiving candidate CVs under applications/.
+    Value: !Ref CvBucket

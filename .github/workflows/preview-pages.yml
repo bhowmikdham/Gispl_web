@@ -11,6 +11,7 @@ on:
   push:
     branches:
       - claude/website-audit-plan-fe8651
+      - claude/website-audit-plan-fe8651-40hly6
 
 permissions:
   contents: read
@@ -24,6 +25,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The two backends ship no runtime dependencies and their suites need no
+  # network and no AWS, so there is no reason not to run them on every push.
+  api-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [portal-api, site-api]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Test ${{ matrix.service }}
+        working-directory: ${{ matrix.service }}
+        run: node --test
+
   build:
     runs-on: ubuntu-latest
     steps:

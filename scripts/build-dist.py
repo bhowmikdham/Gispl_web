@@ -17,8 +17,16 @@ Usage:
     cd portal && npm run build                    # produces portal/out/
     cd ..     && .venv/bin/python scripts/build-content.py   # produces build/
               && python3 scripts/build-dist.py
+
+Options:
+    --api-base URL   Point the site's forms at a deployed site-api. Without it
+                     assets/js/api.js keeps its empty default and every form
+                     falls back to its `mailto:` handoff — which is what the
+                     GitHub Pages review deploy runs on.
 """
+import io
 import os
+import re
 import shutil
 import sys
 
@@ -36,7 +44,40 @@ EXCLUDE_HTML = {"admin.html"}
 EXCLUDE_ASSETS = {"admin.js"}
 
 
+# The one line in assets/js/api.js that decides whether the site has a backend.
+API_BASE_LINE = re.compile(r'^(\s*var API_BASE = )".*?"(; /\* build-dist:api-base \*/)$', re.M)
+
+
+def stamp_api_base(api_base: str) -> None:
+    """Rewrite dist/assets/js/api.js so the forms post instead of opening a mailto."""
+    path = os.path.join(DIST, "assets", "js", "api.js")
+    with io.open(path, encoding="utf-8") as fh:
+        src = fh.read()
+    # A silent no-op here would ship a site whose forms look wired up and are
+    # not, so a missed marker is a hard error.
+    new, n = API_BASE_LINE.subn(lambda m: '%s"%s"%s' % (m.group(1), api_base, m.group(2)), src)
+    if n != 1:
+        raise SystemExit("ERROR: could not find the API_BASE marker in assets/js/api.js")
+    with io.open(path, "w", encoding="utf-8") as fh:
+        fh.write(new)
+
+
 def main() -> int:
+    argv = sys.argv[1:]
+    api_base = ""
+    if "--api-base" in argv:
+        i = argv.index("--api-base")
+        if i + 1 >= len(argv):
+            print("ERROR: --api-base needs a URL", file=sys.stderr)
+            return 1
+        api_base = argv[i + 1].rstrip("/")
+        if not api_base.startswith("http"):
+            print("ERROR: --api-base must be an absolute URL (https://…)", file=sys.stderr)
+            return 1
+        if '"' in api_base or "\\" in api_base:
+            print("ERROR: --api-base contains a character that cannot go in a JS string", file=sys.stderr)
+            return 1
+
     if not os.path.isdir(PORTAL_OUT):
         print("ERROR: portal/out/ missing. Run `cd portal && npm run build` first.", file=sys.stderr)
         return 1
@@ -89,8 +130,13 @@ def main() -> int:
 
     shutil.copytree(PORTAL_OUT, os.path.join(DIST, "portal"))
 
+    if api_base:
+        stamp_api_base(api_base)
+
     print(f"dist/ assembled: {n_html} hand-written pages + {n_gen} generated "
           f"+ assets + portal/")
+    print(f"  forms → {api_base}" if api_base
+          else "  forms → mailto: fallback (no --api-base given)")
     print(f"  → {DIST}")
     print("Serve locally:  python3 -m http.server 8080 -d dist")
     return 0

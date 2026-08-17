@@ -61,6 +61,27 @@ data in localStorage) with an AWS seam (Cognito + API) that flips via env vars �
   `portal/src/lib/paths.ts` both read it and **must stay in step**; a mismatch silently 404s
   assets that `asset()` builds while `next/link` URLs keep working.
 
+## Backends (`site-api/`, `portal-api/`)
+
+Two **separate** Node 20 ESM services, zero runtime dependencies, each with its own SAM stack.
+They are kept apart on purpose: `site-api` is a public unauthenticated **write** surface,
+`portal-api` an authenticated tenant-scoped **read** one, so abuse of the first cannot reach
+client data in the second and the portal keeps its read-only IAM policy.
+
+- **`site-api/`** — the public forms: proposal request (`contact.html`), DPDP checklist gate
+  (`dpdp-readiness.html`), newsletter double opt-in (insights pages) and job applications
+  (`/careers/roles/**`). `npm test` runs 37 tests with no network and no AWS. Full detail —
+  endpoints, anti-abuse, DPDP consent posture, env vars, deploy — in `site-api/README.md`.
+- **`portal-api/`** — the client portal's backend. See `portal-api/README.md`.
+
+**The site works with neither.** `assets/js/api.js` holds one constant, `API_BASE`, empty by
+default; while it is empty every form keeps the `mailto:` handoff it shipped with, which is what
+the GitHub Pages review deploy runs on. Stamp it at deploy time —
+`python3 scripts/build-dist.py --api-base https://…` — and the same forms post JSON instead,
+still falling back to `mailto:` on a network or 5xx failure so a lead is never dropped.
+`api.js` must load **before** `contact.js` / `newsletter.js` / `apply.js` / `dpdp.js`; the two
+hand-maintained pages carry the tag, generated pages get it from `scripts/build-content.py`.
+
 ## Build scripts (`scripts/`)
 
 `scripts/lib/` holds shared helpers. `lib/pageshell.py` owns the single definition of the shared

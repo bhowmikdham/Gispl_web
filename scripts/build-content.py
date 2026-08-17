@@ -252,7 +252,7 @@ def main():
                                   base="/insights/"),
          NAV_INSIGHTS,
          {"path": "/insights/", "changefreq": "weekly", "priority": "0.8"},
-         scripts=["newsletter.js"])
+         scripts=["api.js", "newsletter.js"])
 
     # ------------------------------------------------------- article pages
     for post in posts:
@@ -307,7 +307,7 @@ def main():
              NAV_INSIGHTS,
              {"path": "/insights/category/%s/" % slug, "changefreq": "weekly",
               "priority": "0.5"} if in_cat else None,
-             scripts=["newsletter.js"])
+             scripts=["api.js", "newsletter.js"])
 
     # -------------------------------------------------------- author pages
     for slug, author in sorted(authors.items()):
@@ -329,7 +329,7 @@ def main():
              NAV_INSIGHTS,
              {"path": "/insights/author/%s/" % slug, "changefreq": "monthly",
               "priority": "0.3"} if by else None,
-             scripts=["newsletter.js"])
+             scripts=["api.js", "newsletter.js"])
 
     # --------------------------------------------------------- roles board
     teams = sorted(set(r["team"] for r in open_roles if r["team"]))
@@ -369,7 +369,7 @@ def main():
              {"path": "/careers/roles/%s/" % role["slug"],
               "lastmod": dates.iso_date(role["postedAt"]),
               "changefreq": "weekly", "priority": "0.6"},
-             scripts=["apply.js"])
+             scripts=["api.js", "apply.js"])
 
     # ------------------------------------------------------------- data + feeds
     data_dir = os.path.join(BUILD, "assets", "data")

@@ -171,7 +171,13 @@ all links resolve.
 
 ## Decisions needed (can't be made from the code)
 
-1. Contact form + newsletter: what should they do until the AWS backend lands?
+1. ~~Contact form + newsletter: what should they do until the AWS backend lands?~~
+   **Resolved (Phase 5).** `site-api/` now captures proposal requests, the DPDP checklist gate,
+   newsletter double opt-in and job applications. The site posts to it when
+   `assets/js/api.js` carries an API base and keeps the `mailto:` handoff when it does not, so
+   nothing has to change on the review deploy. Still needed before it goes live: an SES-verified
+   sender, the account out of the SES sandbox, and SPF/DKIM/DMARC on `gisconsulting.in` —
+   see `site-api/README.md`.
 2. Leadership/testimonial names on about/careers — real or placeholders?
 3. Real images available for the placeholder frames? (Or restyle frames label-free.)
 4. LinkedIn URL and "Client Login" destination — or remove both?
