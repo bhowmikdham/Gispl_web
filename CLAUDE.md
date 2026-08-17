@@ -90,6 +90,22 @@ imports it so the guard and any future builder cannot disagree about what a corr
 Content-pipeline deps are pinned in `requirements.txt` (`python3 -m venv .venv && .venv/bin/pip
 install -r requirements.txt`); the shipped site itself has zero runtime dependencies.
 
+### Two values you must not hand-edit in the pages
+
+`apply-page-seo.py` stamps a delimited `<!-- gispl:seo:begin … end -->` block into each
+hand-maintained page and **strips any pre-existing `og:*` tag** first, so a page can never carry
+two conflicting values. It derives `og:title` from that page's `<title>` and `og:description`
+from its `<meta name="description">`.
+
+- **Editing `og:title` directly in the HTML does nothing** — the next run overwrites it. When
+  `<title>` (an SEO field, carries keywords) and `og:title` (a brand surface, carries
+  positioning) must differ, set `ogTitle` on that page's entry in `content/pages.yml`. Only
+  `index` and `about` use it today, both to carry "Building the Architecture of Enterprise Trust".
+- **The header lockup lives in `content/site.yml` as `tagline`**, not only in the 11 pages.
+  Change it in one and not the other and the generated pages drift from the hand-maintained ones,
+  which `check-header-sync.py` then fails on. Change both together, then re-run
+  `apply-page-seo.py` and `build-content.py`.
+
 **The external `shell.py` / `pages.py` builders are gone.** They used to re-emit `index.html`,
 `careers.html` and `services.html` from a session scratchpad outside the repo, and older notes
 warn about them clobbering hand-edits. Verified 2026-08-17: they no longer exist on disk. Those
