@@ -59,9 +59,14 @@ all links resolve.
   "IMAGE 4:3" (`service-vapt.html:129`), "PHOTO 16:10" ×3 + "TEAM PHOTO 4:5" + "PORTRAIT 3:4"
   (`careers.html:189,202,215,257,275`), "TEAM PHOTO 4:3" + "PORTRAIT 3:4" ×4 (about leadership).
   Either drop in real images or restyle the frames so no spec label is visible.
-- [ ] ● **DECISION NEEDED — are these real people?** about.html leadership (Rajesh Kumar CEO,
+- [x] ● **DECISION NEEDED — are these real people?** about.html leadership (Rajesh Kumar CEO,
   Aisha Rahman CISO, Vikram Nair, Meera Iyer) and careers testimonial (Priya Sharma) all have
   placeholder portraits. If dummy names → replace before launch.
+  **Resolved 2026-08-17:** they were all invented. The four leadership profiles are replaced with
+  the real founder, Dr. Naveen Dham, and his credentials from the company portfolio; the careers
+  testimonials (by then Arjun Mehta and Fatima Al-Kuwari) are now attributed by role only, which
+  is honest for anonymised staff quotes. Dr. Dham is the only named individual left on the site.
+  His portrait is still an ND monogram — a photograph is the open item, tracked in NEEDS-YOU.md.
 - [x] ○ Brand casing drift: `sebi-cscrf.html` uses "CERT-In" (title/meta/hero ×4) vs "CERT-IN"
   everywhere else; "24/7" (services, vapt) vs "24×7" (menu, service-ai-security) for same claim.
 
