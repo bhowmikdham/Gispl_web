@@ -45,6 +45,17 @@ jobs:
       - name: Check header/footer sync
         run: python3 scripts/check-header-sync.py
 
+      - name: Install content-build dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate content
+        run: python3 scripts/check-content.py
+
+      - name: Build content pages
+        # build-dist.py hard-errors without build/ — the insights and careers
+        # sections live there, so a deploy missing it would 404 every nav link.
+        run: python3 scripts/build-content.py --base-path /${{ github.event.repository.name }}
+
       - name: Build client portal
         working-directory: portal
         # GitHub Pages serves a project site under /<repo>/, so the whole site
