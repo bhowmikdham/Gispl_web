@@ -123,7 +123,50 @@ Decided on your instruction not to wait. Each is reversible.
 
 ---
 
-## 6. Permissions, for next time
+## 6. Name a Grievance Officer — *decision, and the most urgent one*
+
+**Where:** `privacy.html`, "Grievance officer" section.
+
+The page was rendering the literal text **"[Name], Grievance Officer"** and
+**"[registered address]"** to visitors. That is now role-addressed ("The
+Grievance Officer") with the real Gurgaon corporate address filled in, so nothing
+embarrassing is on the page — but a **named individual is still missing**.
+
+Why this one matters more than the rest: the DPDP Act requires a Data Fiduciary to
+publish its Grievance Officer's contact details, and GISPL *sells DPDP
+readiness*. A prospect doing diligence who finds a placeholder on the privacy
+policy of a firm that audits privacy compliance draws one conclusion, and it is
+not a good one.
+
+I did not invent a name — fabricating a legal contact is not a judgement call I
+should make.
+
+**To fix:** give me the officer's name and direct contact, and confirm the
+registered office address matches your filings. Both `privacy.html` and
+`terms.html` also still carry `<!-- DRAFT: have counsel review before launch -->`
+markers, which should stay until counsel has actually reviewed them.
+
+---
+
+## 7. From the parallel session — *its blockers, folded in*
+
+The other agent finished and went idle at `85839c4`, reporting four blockers. One
+of them ("copy") turned out to be in my lane and is now **resolved**: all twelve
+role files under `content/roles/` had seeded placeholder bodies ending "(Seed
+description — edit in the admin.)" and now carry real copy. Five of them were also
+advertising jobs in Doha and Delhi; those moved to Dubai and Gurgaon.
+
+Its three remaining blockers need you:
+
+- **GA4 measurement ID** — analytics is wired but has no property to report to.
+- **AWS SES** — the new `site-api` captures form submissions but cannot send
+  notification email until SES is configured and out of sandbox. Nothing was
+  deployed and no live email was sent; see `site-api/README.md`.
+- **Grievance officer** — the same item as section 6 above.
+
+---
+
+## 8. Permissions, for next time
 
 This repo had no `.claude/settings.json`, so every outward-facing action (git
 push, cross-agent messaging) escalated to a prompt even in auto mode. A proposed
