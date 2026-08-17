@@ -10,3 +10,4 @@ portal/next-env.d.ts
 
 # deploy staging tree (assembled by scripts/build-dist.py)
 dist/
+portal/tsconfig.tsbuildinfo

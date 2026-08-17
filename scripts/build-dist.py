@@ -28,6 +28,9 @@ PORTAL_OUT = os.path.join(ROOT, "portal", "out")
 INCLUDE_FILES = ["robots.txt"]
 INCLUDE_DIRS = ["assets"]
 EXCLUDE_HTML = {"admin.html"}
+# admin.html never ships, so its script is dead weight in dist/ — and it maps
+# out the admin UI for anyone who fetches it. Drop it alongside the page.
+EXCLUDE_ASSETS = {"admin.js"}
 
 
 def main() -> int:
@@ -63,7 +66,8 @@ def main() -> int:
     for d in INCLUDE_DIRS:
         p = os.path.join(ROOT, d)
         if os.path.isdir(p):
-            shutil.copytree(p, os.path.join(DIST, d))
+            shutil.copytree(p, os.path.join(DIST, d),
+                            ignore=shutil.ignore_patterns(*EXCLUDE_ASSETS))
 
     shutil.copytree(PORTAL_OUT, os.path.join(DIST, "portal"))
 

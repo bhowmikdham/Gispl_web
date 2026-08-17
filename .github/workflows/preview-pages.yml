@@ -1,0 +1,82 @@
+# Review deploy — publishes the site to GitHub Pages for internal review.
+#
+# This is NOT the production pipeline. The build is marked noindex and
+# robots.txt disallows everything (scripts/make-preview.py), so this copy can
+# never be indexed or compete with the real domain. admin.html and
+# assets/js/admin.js are excluded by scripts/build-dist.py.
+name: Preview (GitHub Pages)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/website-audit-plan-fe8651
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; queue instead of cancelling so a review link is
+# not left pointing at a half-published tree.
+concurrency:
+  group: preview-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: portal/package-lock.json
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Guard that runs today for the first time in CI: the header/footer are
+      # hand-copied into every public page, and this is the only thing that
+      # catches drift between them.
+      - name: Check header/footer sync
+        run: python3 scripts/check-header-sync.py
+
+      - name: Build client portal
+        working-directory: portal
+        # GitHub Pages serves a project site under /<repo>/, so the whole site
+        # is nested one level down. next.config.ts and src/lib/paths.ts both
+        # read this to prefix their asset URLs.
+        env:
+          NEXT_PUBLIC_SITE_BASE_PATH: /${{ github.event.repository.name }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Assemble dist/
+        run: python3 scripts/build-dist.py
+
+      - name: Mark as non-indexable preview
+        run: python3 scripts/make-preview.py dist
+
+      # Pages would otherwise run the artifact through Jekyll, which silently
+      # drops every path beginning with an underscore — i.e. all of _next/.
+      - name: Disable Jekyll
+        run: touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
