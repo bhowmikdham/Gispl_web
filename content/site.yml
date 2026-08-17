@@ -20,12 +20,12 @@ description: >-
 
 # Mail runs on a DIFFERENT domain to the website. The target is
 # gisconsulting.in — SPF/DKIM/DMARC belong there, not on gispl.co — but the
-# addresses below stay @gispl.com until that mailbox is confirmed live.
+# addresses below stay @gisconsulting.in until that mailbox is confirmed live.
 # Advertising an address that doesn't receive mail loses leads outright, which
 # is worse than the domain mismatch. Switch here and sweep the hand-written
 # pages in the same commit; they must never disagree.
-email: "info@gispl.com"
-careersEmail: "careers@gispl.com"
+email: "info@gisconsulting.in"
+careersEmail: "careers@gisconsulting.in"
 phone: "+91 124 401 0000"
 
 # RFC 9116 requires an Expires field on security.txt, and treats the file as

@@ -156,6 +156,6 @@
     render();
   }).catch(function (err) {
     if (window.console) console.error("roles: failed to load jobs", err);
-    statusMsg("Open roles are temporarily unavailable. Please email careers@gispl.com.");
+    statusMsg("Open roles are temporarily unavailable. Please email careers@gisconsulting.in.");
   });
 })();

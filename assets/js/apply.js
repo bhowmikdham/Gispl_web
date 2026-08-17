@@ -22,10 +22,11 @@
 
   var slug = mount.getAttribute("data-role-slug") || "";
   var title = mount.getAttribute("data-role-title") || "this role";
-  // Matches the applyEmail in content/roles/*.md. Both move to
-  // careers@gisconsulting.in in the Phase 7 domain sweep — change them together,
-  // or applications route to a mailbox nobody reads.
-  var to = mount.getAttribute("data-apply-email") || "careers@gispl.com";
+  // Matches the applyEmail in content/roles/*.md — change them together, or
+  // applications route to a mailbox nobody reads. Not hypothetical: the site
+  // previously advertised @gispl.com, a domain GISPL does not own (it is listed
+  // for sale and has no MX records), so every application mailto went nowhere.
+  var to = mount.getAttribute("data-apply-email") || "careers@gisconsulting.in";
 
   var SANS = "'IBM Plex Sans'";
   var MONO = "'IBM Plex Mono'";

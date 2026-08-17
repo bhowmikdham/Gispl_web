@@ -7,7 +7,7 @@ remote: false
 status: published
 postedAt: '2026-06-01T09:00:00+00:00'
 validThrough: '2027-06-01'
-applyEmail: careers@gispl.com
+applyEmail: careers@gisconsulting.in
 responsibilities:
 - Deliver engagements to GISPL quality standards, on time and within scope.
 - Collaborate with the Compliance team and communicate findings clearly to clients.

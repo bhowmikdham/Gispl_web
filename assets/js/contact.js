@@ -14,7 +14,7 @@
     });
 
     /* No backend yet: hand the enquiry to the visitor's email client, fully composed,
-       so the lead actually reaches info@gispl.com instead of being discarded. */
+       so the lead actually reaches info@gisconsulting.in instead of being discarded. */
     var FIELD_LABELS = { name: "Name", company: "Company", email: "Email", phone: "Phone", industry: "Industry", service: "Service", location: "Location", message: "Message" };
     function mailtoURL() {
       var lines = [], service = "";
@@ -26,7 +26,7 @@
       });
       var subject = "Proposal request" + (service ? " — " + service : "");
       var body = "Hello GISPL,\n\nPlease send a proposal for the following:\n\n" + lines.join("\n") + "\n";
-      return "mailto:info@gispl.com?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+      return "mailto:info@gisconsulting.in?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
     }
 
     form.addEventListener("submit", function (ev) {
