@@ -27,9 +27,11 @@
   syncBtn();
 
   // keep the open-position counts honest against the live data
-  if (window.GISPL && GISPL.data) {
-    GISPL.data.list("jobs").then(function (jobs) {
-      totalEls.forEach(function (el) { if (el) el.textContent = jobs.length; });
-    }).catch(function () { /* leave the static fallback */ });
-  }
+  fetch((window.GX_ROOT || "/") + "assets/data/roles.json")
+    .then(function (r) { return r.ok ? r.json() : []; })
+    .then(function (jobs) {
+      var el = document.getElementById("openCount");
+      if (el && jobs && jobs.length) el.textContent = jobs.length;
+    })
+    .catch(function () { /* count is decorative — leave the static fallback */ });
 })();

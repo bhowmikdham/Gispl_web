@@ -7,6 +7,13 @@
       "runtimeArgs": ["-c", "python3 -m http.server ${PORT:-5177}"],
       "port": 5177,
       "autoPort": true
+    },
+    {
+      "name": "gispl-dist",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "python3 -m http.server ${PORT:-5178} -d dist"],
+      "port": 5178,
+      "autoPort": true
     }
   ]
 }

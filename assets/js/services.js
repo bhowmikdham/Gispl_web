@@ -66,6 +66,25 @@
       p.classList.toggle("sv-x-live", p.getAttribute("data-xp") === String(i));
     });
   }
+  /* Deep link: services.html#capability-<n> opens that category.
+     The Services mega-menu lists 39 capabilities; only 2 have their own page,
+     so the other 37 used to land on the top of this page with nothing
+     selected and no anchor to scroll to. They now arrive with the right
+     category open. */
+  function openFromHash() {
+    var m = /^#capability-([0-4])$/.exec(location.hash || "");
+    if (!m || !tabs.length) return;
+    select(m[1]);
+    var host = document.getElementById("svExplorer") || tabs[0];
+    var target = tabs[+m[1]] || host;
+    if (target && target.scrollIntoView) {
+      target.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    }
+    if (target && target.focus) target.focus({ preventScroll: true });
+  }
+  openFromHash();
+  window.addEventListener("hashchange", openFromHash);
+
   Array.prototype.forEach.call(tabs, function (t, idx) {
     t.addEventListener("click", function () { select(t.getAttribute("data-x")); });
     t.addEventListener("keydown", function (ev) {

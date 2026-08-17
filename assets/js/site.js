@@ -4,6 +4,46 @@
 (function () {
   "use strict";
 
+  /* Site root, derived from THIS script's own URL.
+     Pages used to live only at the root, so a relative "assets/js/…" always
+     resolved. Generated pages sit at /insights/<slug>/ and /careers/roles/<slug>/,
+     where the same string resolves to /insights/<slug>/assets/js/… and 404s.
+     A hardcoded "/assets/js/…" would fix that but break any deploy served from
+     a sub-path (GitHub Pages serves this repo under /Gispl_web/).
+     Reading it off the script tag handles both, with no build-time config. */
+  var GX_ROOT = (function () {
+    var el = document.currentScript;
+    if (!el) {
+      var all = document.getElementsByTagName("script");
+      for (var i = all.length - 1; i >= 0; i--) {
+        if (/\/assets\/js\/site\.js(\?|$)/.test(all[i].src || "")) { el = all[i]; break; }
+      }
+    }
+    if (el && el.src) {
+      var m = el.src.match(/^(.*\/)assets\/js\/site\.js(?:\?|$)/);
+      if (m) return m[1];
+    }
+    return "/";
+  })();
+  window.GX_ROOT = GX_ROOT;
+
+  /* One-release cleanup of the retired localStorage content layer.
+     Content used to be seeded into localStorage once, gated by
+     gispl:seeded:v1 — which is why a redeployed posts.json never reached a
+     returning visitor. Content is static HTML now and nothing reads these
+     keys, but every past visitor still carries ~40 KB of stale copies.
+     gispl:applications matters most: it held submitted job applications with
+     the CV base64-encoded, unencrypted, on the candidate's own machine.
+     Remove after one release. */
+  (function () {
+    try {
+      ["gispl:jobs", "gispl:posts", "gispl:seeded:v1", "gispl:applications",
+       "gispl:templates", "gispl:admin-session"].forEach(function (k) {
+        localStorage.removeItem(k);
+      });
+    } catch (e) { /* storage disabled or partitioned — nothing to clean */ }
+  })();
+
   // Shared services taxonomy — drives the Services mega-menu on every page.
   var SVC = [
     { name: "Compliance & certification", blurb: "Certify to the standards your customers, regulators and boards expect.", items: ["PCI DSS", "HIPAA", "SOC 1 & SOC 2", "GDPR", "RBI compliance (NBFC)", "Data Protection Act", "ISO standards"] },
@@ -16,9 +56,25 @@
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }
 
-  // items with a dedicated page deep-link to it; everything else goes to the services overview
-  var ITEM_HREFS = { "VAPT services": "service-vapt.html", "AI & LLM security testing": "service-ai-security.html" };
-  function itemHref(x) { return ITEM_HREFS[x] || "services.html"; }
+  /* Items with a dedicated page deep-link to it. The other 37 used to fall
+     through to a bare "services.html" — the top of a long page, with no anchor
+     for the capability the visitor clicked and nothing selected. They now open
+     the matching category in the capability explorer (services.js reads the
+     hash), so a two-click path ends somewhere relevant. */
+  var ITEM_HREFS = {
+    "VAPT services": "service-vapt.html",
+    "AI & LLM security testing": "service-ai-security.html",
+    "Data Protection Act": "dpdp-readiness.html"
+  };
+  var ITEM_CATEGORY = {};
+  SVC.forEach(function (c, i) {
+    c.items.forEach(function (item) { ITEM_CATEGORY[item] = i; });
+  });
+  function itemHref(x) {
+    if (ITEM_HREFS[x]) return ITEM_HREFS[x];
+    var i = ITEM_CATEGORY[x];
+    return i === undefined ? "services.html" : "services.html#capability-" + i;
+  }
 
   /* ---- Services mega-menu ---- */
   function paintRow(el, on) {
@@ -106,43 +162,38 @@
     });
   });
 
-  // jobs + posts come from the data provider (config.js); fetched once, on first keystroke
-  var dynState = { started: false, jobs: [], posts: [] };
+  /* Jobs + posts come from a build-time index (assets/data/search-index.json),
+     fetched once on the first keystroke.
+
+     It used to come from the localStorage data provider, which meant search
+     results were whatever that browser happened to have seeded — and a page
+     that didn't load config.js had no roles or insights in search at all.
+     A generated index is the same for every visitor and cannot go stale
+     against the pages it points at, because the same build emits both. */
+  var dynState = { started: false, items: [] };
   function loadDynamic(onReady) {
-    if (dynState.started || !(window.GISPL && GISPL.data)) { onReady(); return; }
+    if (dynState.started) { onReady(); return; }
     dynState.started = true;
-    var done = 0;
-    function fin() { done++; if (done === 2) onReady(); }
-    GISPL.data.list("jobs").then(function (jobs) {
-      dynState.jobs = jobs.map(function (j) {
-        return { t: j.title, href: "job.html?slug=" + encodeURIComponent(j.slug), type: "Role", sub: (j.team || "") + " · " + (j.loc || ""), kw: ((j.team || "") + " " + (j.loc || "") + " " + (j.type || "") + " job role opening position vacancy").toLowerCase() };
-      });
-    }).catch(function () {}).then(fin);
-    GISPL.data.list("posts").then(function (posts) {
-      dynState.posts = posts.map(function (p) {
-        return { t: p.title, href: "article.html?slug=" + encodeURIComponent(p.slug), type: "Insight", sub: p.category || "", kw: ((p.category || "") + " " + (p.excerpt || "") + " article insight blog").toLowerCase() };
-      });
-    }).catch(function () {}).then(fin);
+    fetch((window.GX_ROOT || "/") + "assets/data/search-index.json")
+      .then(function (r) { return r.ok ? r.json() : { items: [] }; })
+      .then(function (data) {
+        dynState.items = (data.items || []).map(function (it) {
+          return { t: it.t, href: it.h, type: it.ty, sub: it.s || "",
+                   kw: ((it.k || "") + " " + (it.s || "")).toLowerCase() };
+        });
+      })
+      .catch(function () { /* search still works over the static entries */ })
+      .then(onReady, onReady);
   }
 
-  function wordsOf(s) { return String(s).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean); }
-  // word-prefix matching: "pen" hits "penetration"/"pentest", never "open"/"opening"
-  function scoreEntry(e, words) {
-    if (!e._tw) { e._tw = wordsOf(e.t); e._kw = wordsOf((e.kw || "") + " " + (e.sub || "")); }
-    var s = 0;
-    for (var i = 0; i < words.length; i++) {
-      var w = words[i], m = 0, j;
-      for (j = 0; j < e._tw.length; j++) if (e._tw[j].indexOf(w) === 0) { m = (j === 0 ? 4 : 3); break; }
-      if (!m) for (j = 0; j < e._kw.length; j++) if (e._kw[j].indexOf(w) === 0) { m = 1; break; }
-      if (!m) return 0; // every query word must match somewhere
-      s += m;
-    }
-    return s;
-  }
+  // Scoring lives in search-core.js, shared with the /search/ results page so
+  // the dropdown and the full results list can never rank a query differently.
+  var wordsOf = GISPLSearch.wordsOf;
+  var scoreEntry = GISPLSearch.score;
   function searchAll(q) {
     var words = q.toLowerCase().split(/\s+/).filter(function (w) { return w.length >= 2; });
     if (!words.length) return [];
-    var all = SEARCH_STATIC.concat(dynState.jobs, dynState.posts), out = [];
+    var all = SEARCH_STATIC.concat(dynState.items), out = [];
     each(all, function (e) { var s = scoreEntry(e, words); if (s) out.push({ e: e, s: s }); });
     out.sort(function (a, b) { return b.s - a.s || (a.e.t < b.e.t ? -1 : 1); });
     return out.slice(0, 9).map(function (x) { return x.e; });
@@ -169,7 +220,7 @@
       + '<span style="flex:none;font:500 9px \'IBM Plex Mono\';letter-spacing:.14em;color:rgba(255,255,255,.45);border:1px solid rgba(255,255,255,.18);padding:3px 8px;border-radius:12px">' + e.type.toUpperCase() + "</span></a>";
   }
   function footHTML(q) {
-    return '<a href="roles.html?q=' + encodeURIComponent(q) + '" style="display:block;padding:12px 16px;text-decoration:none;font:600 13px \'IBM Plex Sans\';color:#F26A21;border-top:1px solid rgba(255,255,255,.1)">Search open roles for &ldquo;' + esc(q) + '&rdquo; &rarr;</a>';
+    return '<a href="' + GISPLSearch.resultsUrl(q) + '" style="display:block;padding:12px 16px;text-decoration:none;font:600 13px \'IBM Plex Sans\';color:#F26A21;border-top:1px solid rgba(255,255,255,.1)">See all results for &ldquo;' + esc(q) + '&rdquo; &rarr;</a>';
   }
 
   // wires live search onto an input; mountFn places the results panel, hooks = {onEscape, onOpen}
@@ -221,7 +272,7 @@
         var href = null;
         if (open && active >= 0 && results[active]) href = results[active].href;
         else if (open && results.length) href = results[0].href;
-        else if (input.value.trim()) href = "roles.html?q=" + encodeURIComponent(input.value.trim());
+        else if (input.value.trim()) href = GISPLSearch.resultsUrl(input.value.trim());
         if (href) location.href = href;
       } else if (e.key === "Escape") { close(); if (hooks.onEscape) hooks.onEscape(); }
     });
@@ -298,7 +349,7 @@
   (function () {
     if (window.__gxAssistant || document.getElementById("gxAiFab")) return;
     var s = document.createElement("script");
-    s.src = "assets/js/assistant.js";
+    s.src = GX_ROOT + "assets/js/assistant.js";
     s.defer = true;
     document.body.appendChild(s);
   })();

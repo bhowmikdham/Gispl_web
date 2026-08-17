@@ -1,0 +1,113 @@
+# Single source for every absolute URL and organisation fact the build emits.
+#
+# Canonicals, og:url, sitemap entries and JSON-LD @id values all derive from
+# baseUrl. It exists in exactly one place so switching domains is one edit
+# rather than a sweep across every generated page.
+
+baseUrl: "https://gispl.co"
+
+# Bare host is canonical; www 301s to it (CloudFront function, Phase 9).
+canonicalHost: "gispl.co"
+
+name: "GISPL"
+legalName: "G-Info Technology Solutions Pvt. Ltd."
+siteName: "GISPL — G-Info Technology Solutions"
+tagline: "CYBERSECURITY · COMPLIANCE · FORENSICS"
+# "empanelled", not "certified": CERT-In grants empanelment to auditing
+# organisations, it does not certify them. The wrong word in structured data is
+# a credential claim we cannot support.
+description: >-
+  CERT-IN empanelled cybersecurity, compliance and forensic engineering — VAPT,
+  ISO 27001, PCI DSS, DPDP readiness, managed security and cyber forensics.
+  Trusted by 30+ government ministries, Fortune 500 corporations and Big-4 firms
+  across India, the UAE, the USA, Canada and Australia.
+
+foundingDate: "2012"
+founder: "Dr. Naveen Dham"
+
+# Only awards the site itself displays (about.html "Judged by people who owe us
+# nothing"). Structured data that claims a credential the page does not show is
+# a manual-action risk, so these two lists must be changed together.
+awards:
+  - "Forbes India — Most Admired Companies in India, 2024"
+  - "The Economic Times — Most Trusted Brand in India, 2024"
+  - "Outlook — Iconic Brand in India, 2024"
+  - "The Times of India — 6 Most Reliable Brands of the Year, 2024–25"
+
+# Mail runs on a DIFFERENT domain to the website. The target is
+# gisconsulting.in — SPF/DKIM/DMARC belong there, not on gispl.co — but the
+# addresses below stay @gisconsulting.in until that mailbox is confirmed live.
+# Advertising an address that doesn't receive mail loses leads outright, which
+# is worse than the domain mismatch. Switch here and sweep the hand-written
+# pages in the same commit; they must never disagree.
+email: "info@gisconsulting.in"
+careersEmail: "careers@gisconsulting.in"
+# Toll-free India line. Displayed on the pages as "1800 212 676767"; carried
+# here with the country code because structured data is read by machines that
+# cannot infer it. The old +91 124 401 0000 appears nowhere in the official
+# company portfolio.
+phone: "+91 1800 212 676767"
+
+# RFC 9116 requires an Expires field on security.txt, and treats the file as
+# invalid past that date. Set deliberately rather than computed from build time
+# (which would churn the file on every build); review it annually.
+securityTxtExpires: "2027-08-17T00:00:00.000Z"
+
+logo: "/assets/images/gispl-logo-ondark.png"
+defaultOgImage: "/assets/images/og-default.png"
+
+# Offices, for LocalBusiness JSON-LD. Five, not the four this file used to
+# carry: there is no Doha office and no Delhi office. Street addresses and
+# per-office phone numbers now come from the real ones on contact.html — the
+# schema must not assert an address the page does not show, and vice versa.
+offices:
+  - city: "Gurgaon"
+    street: "Level 1, Tower B, 111 & 112, Unitech Business Zone, Sector 50, Golf Course Ext. Road"
+    region: "Haryana"
+    country: "IN"
+    timezone: "Asia/Kolkata"
+    phone: "+91 1800 212 676767"
+    hq: true
+  - city: "Dubai"
+    street: "Boulevard Plaza, Tower 1, Downtown Dubai"
+    region: "Dubai"
+    country: "AE"
+    timezone: "Asia/Dubai"
+    phone: "+971 52 315 0586"
+  - city: "Germantown"
+    street: "13731 Monarch Vista Dr"
+    region: "MD"
+    postalCode: "20874"
+    country: "US"
+    timezone: "America/New_York"
+    phone: "+1 240-720-2889"
+  - city: "Whitby"
+    street: "5 Cork Dr"
+    region: "ON"
+    postalCode: "L1R 2C7"
+    country: "CA"
+    timezone: "America/Toronto"
+    phone: "+1 905-767-4991"
+  - city: "Jimboomba"
+    street: "B07 17 Cusack Lane"
+    region: "QLD"
+    postalCode: "4280"
+    country: "AU"
+    timezone: "Australia/Brisbane"
+    phone: "+61 433 210 781"
+
+insights:
+  title: "Insights"
+  heading: "The thinking behind the"
+  headingAccent: "work"
+  intro: >-
+    Field notes, regulatory reads and hard-won lessons from the front line of
+    information security.
+  perPage: 12
+
+roles:
+  title: "Open roles"
+  heading: "Find your role at GISPL."
+  intro: >-
+    Search every open position across our Assessments, Compliance, Managed
+    Security and Forensics practices — then apply in minutes.
