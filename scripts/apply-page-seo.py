@@ -135,9 +135,14 @@ def build_block(site, page, html):
                                   page.get("serviceType")))
     elif kind == "contact":
         blocks.extend(seo.local_businesses(site))
-        faq = seo.faq_page(faq_pairs(html))
-        if faq:
-            blocks.append(faq)
+
+    # FAQPage wherever the page actually renders a Q&A accordion — not only on
+    # contact.html, which is where this used to be pinned. The pairs are read
+    # from the rendered <details>, so the marked-up answer is by construction
+    # the one a visitor can see, which is what Google requires.
+    faq = seo.faq_page(faq_pairs(html))
+    if faq:
+        blocks.append(faq)
 
     for b in blocks:
         lines.append('<script type="application/ld+json">%s</script>'
