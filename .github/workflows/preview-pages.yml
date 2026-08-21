@@ -12,6 +12,9 @@ on:
     branches:
       - claude/website-audit-plan-fe8651
       - claude/website-audit-plan-fe8651-40hly6
+      # carries both workstreams: the content pipeline branch above is merged
+      # into this one, so it is the branch that reflects the current site
+      - claude/website-brand-image-dklsyy
 
 permissions:
   contents: read
