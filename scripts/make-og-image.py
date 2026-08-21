@@ -18,6 +18,7 @@ image behind a logo, not a typographic surface. Self-hosting the real faces
 """
 from __future__ import print_function
 
+import io
 import os
 import sys
 
@@ -28,6 +29,7 @@ except ImportError:  # pragma: no cover
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "assets", "images", "og-default.png")
+SITE_YML = os.path.join(ROOT, "content", "site.yml")
 LOGO = os.path.join(ROOT, "assets", "images", "gispl-logo-ondark.png")
 
 W, H = 1200, 630
@@ -46,6 +48,25 @@ MONO_CANDIDATES = [
     "/System/Library/Fonts/Supplemental/Courier New Bold.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
 ]
+
+
+def site_facts():
+    """Brand strings, read from content/site.yml rather than hard-coded here.
+
+    This image is a baked PNG, so a stale string in it survives every grep and
+    every guard the repo runs — which is exactly how it came to still say
+    "CERT-IN certified" and "PROTECT / COMPLY / GROW" long after both were
+    corrected everywhere else. Reading site.yml means regenerating fixes it.
+    """
+    import yaml
+    with io.open(SITE_YML, encoding="utf-8") as fh:
+        site = yaml.safe_load(fh)
+    return site
+
+
+def spaced(text):
+    """Letter-space a mono lockup the way the site's eyebrow style does."""
+    return "   ".join(part for part in text.split())
 
 
 def load_font(candidates, size):
@@ -87,12 +108,14 @@ def main():
     sub = load_font(FONT_CANDIDATES, 30)
     mono = load_font(MONO_CANDIDATES, 21)
 
+    site = site_facts()
+
     d.text((78, 232), "Cybersecurity, compliance", font=title, fill=WHITE)
     d.text((78, 306), "and cyber forensics.", font=title, fill=ORANGE)
     d.text((78, 410),
-           "CERT-IN certified assessments · ISO 27001 · PCI DSS · DPDP",
+           "CERT-IN empanelled assessments · ISO 27001 · PCI DSS · DPDP",
            font=sub, fill=(196, 205, 222))
-    d.text((78, 512), "P R O T E C T   ·   C O M P L Y   ·   G R O W",
+    d.text((78, 512), spaced(site.get("tagline", "")),
            font=mono, fill=(138, 146, 164))
 
     img.save(OUT, "PNG", optimize=True)

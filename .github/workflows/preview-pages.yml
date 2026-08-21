@@ -78,6 +78,18 @@ jobs:
         # sections live there, so a deploy missing it would 404 every nav link.
         run: python3 scripts/build-content.py --base-path /${{ github.event.repository.name }}
 
+      - name: Check script dependencies
+        # api.js must load before the form scripts, or every form silently
+        # falls back to mailto:. Runs after the content build so it sees the
+        # generated pages too.
+        run: python3 scripts/check-page-scripts.py
+
+      - name: Check internal links resolve
+        # check-header-sync.py proves the headers match each other; identical
+        # and wrong still passes. This proves the targets exist — it is what
+        # would have caught the 81 dead nav links a branch merge reintroduced.
+        run: python3 scripts/check-links.py --base-path /${{ github.event.repository.name }}
+
       - name: Build client portal
         working-directory: portal
         # GitHub Pages serves a project site under /<repo>/, so the whole site

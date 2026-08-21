@@ -84,6 +84,29 @@ hand-maintained pages carry the tag, generated pages get it from `scripts/build-
 
 ## Build scripts (`scripts/`)
 
+### The guards, and what each one actually proves
+
+Run all of these before pushing; CI runs them too.
+
+| Script | Proves |
+| --- | --- |
+| `check-header-sync.py` | the 11 hand-maintained pages carry the *same* header/footer |
+| `check-links.py` | every internal href/src **resolves to a file** |
+| `check-page-scripts.py` | `api.js` loads *before* the form scripts; `search-core.js` before `site.js` |
+| `check-content.py` | front-matter, slugs, dates, cover alt text |
+| `apply-page-seo.py --check` | the canonical/og/JSON-LD blocks are current |
+
+`check-header-sync.py` and `check-links.py` are not redundant, and the difference
+has already cost the site once: sync only proves the headers match **each other**.
+A branch merge resolved the shared header in favour of a pre-Phase-3 copy that
+pointed at the deleted `insights.html` / `roles.html`, and sync passed happily —
+identical and wrong is still identical. 81 dead nav links shipped. `check-links.py`
+is what catches that; pass it `--base-path` when the tree was built with one.
+
+`check-page-scripts.py` guards a failure that is invisible rather than broken:
+without `api.js` the forms still submit, still say thank you, and silently route
+every lead to the visitor's mail client instead of the backend.
+
 `scripts/lib/` holds shared helpers. `lib/pageshell.py` owns the single definition of the shared
 header/footer (the active-nav style pair, the skip list, the normalizer) — `check-header-sync.py`
 imports it so the guard and any future builder cannot disagree about what a correct header is.
@@ -105,6 +128,12 @@ from its `<meta name="description">`.
   Change it in one and not the other and the generated pages drift from the hand-maintained ones,
   which `check-header-sync.py` then fails on. Change both together, then re-run
   `apply-page-seo.py` and `build-content.py`.
+
+`make-og-image.py` and `make-post-covers.py` bake PNGs, so a stale string in one
+survives every grep the repo runs — which is how the default share image went on
+saying "CERT-IN certified" long after the wording was corrected everywhere else.
+Both now read their brand strings from `content/site.yml`; re-run them after any
+change to `tagline` or `description`.
 
 **The external `shell.py` / `pages.py` builders are gone.** They used to re-emit `index.html`,
 `careers.html` and `services.html` from a session scratchpad outside the repo, and older notes

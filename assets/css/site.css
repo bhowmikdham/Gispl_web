@@ -206,3 +206,12 @@ select.hs-input option{color:#0B1E3B;background:#fff}
   .gx-prose h2{font-size:24px;margin-top:34px}
   .gx-prose h3{font-size:19px}
 }
+
+/* Heading column travels with the reader instead of leaving a tall empty
+   area beside a long list. Desktop only: why-grid collapses to one column
+   below 1000px, where sticky would pin the heading over the content. */
+@media(min-width:1001px){.why-grid.gx-sticky-l>:first-child{position:sticky;top:104px}}
+/* A numbered stack that sits in a full-width band, not beside a heading.
+   As a single column its 60ch paragraphs used ~40% of the band and the rest
+   read as empty. Two columns fill it; below 1000px it returns to one. */
+@media(min-width:1001px){.gx-steps-2{display:grid!important;grid-template-columns:1fr 1fr;column-gap:60px}}
