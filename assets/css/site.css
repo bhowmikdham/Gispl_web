@@ -215,3 +215,10 @@ select.hs-input option{color:#0B1E3B;background:#fff}
    As a single column its 60ch paragraphs used ~40% of the band and the rest
    read as empty. Two columns fill it; below 1000px it returns to one. */
 @media(min-width:1001px){.gx-steps-2{display:grid!important;grid-template-columns:1fr 1fr;column-gap:60px}}
+/* Client logo strip. The marks come from many sources at different vintages and
+   colour temperatures; desaturating them makes the row read as one band, and
+   restoring colour on hover keeps each one identifiable. */
+.gx-logos img{filter:grayscale(1);opacity:.62;transition:filter .18s ease,opacity .18s ease}
+.gx-logos:hover img{opacity:.42}
+.gx-logos img:hover{filter:grayscale(0);opacity:1}
+@media(prefers-reduced-motion:reduce){.gx-logos img,.gx-logos:hover img{transition:none}}
