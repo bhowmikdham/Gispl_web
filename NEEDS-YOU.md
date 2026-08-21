@@ -48,22 +48,38 @@ probably deserves its own page.
 
 ---
 
-## 3. Client logo assets — *assets, optional*
+## 3. Permission to display the client logos — *decision*
 
-**Where:** homepage "Trusted by security teams at" marquee.
+**Where:** homepage, "A few of the organisations we secure".
 
-The marquee now uses real client names from the portfolio (Bajaj Finserv, Central
-Bank of India, Panasonic, HAL, DMI Finance, Max Healthcare, InterGlobe, Punjab &
-Sind Bank, Wipro Infotech, Zomato Payments, BHEL, Punj Lloyd) as text wordmarks,
-replacing four repeating placeholders.
+The homepage now runs **28 real client logos**, extracted from the company
+portfolio and normalised: EY, NTT, LIC, POWERGRID, IFFCO, GeM, Aaj Tak, Bajaj
+Finserv, Central Bank of India, Punjab & Sind Bank, IFCI, AMTRON, DCHL, TAAI,
+J.K. Organisation, and the BFSI depth behind them. The navy text marquee above it
+is unchanged.
 
-Text is consistent with the existing design and safe. Real logo marks would look
-stronger — **but** check you hold permission to display each client's mark. Some
-engagement contracts forbid it, and for defence and government clients it may be
-prohibited outright.
+**What needs deciding:** whether GISPL holds the right to display each mark. Some
+engagement contracts forbid naming a client at all, let alone reproducing their
+logo. This is the one thing about the marquee I could not settle.
 
-**To decide:** supply SVG/PNG marks for clients you are contractually clear to
-name visually, or leave as wordmarks.
+**Fifteen logos were deliberately left out**, and you may want to overrule that:
+
+- **All government and defence emblems** — the four ministries, CISF, CAPF, SSB,
+  the state emblems, GST, and the US Air Force seal. India's State Emblem of India
+  (Prohibition of Improper Use) Act 2005 restricts commercial use of the
+  Ashoka-lions emblem that appears in the ministry marks, and the US DoD restricts
+  use of its seals in any way implying endorsement. A firm selling compliance is a
+  poor defendant on that point. The government relationships are already stated in
+  prose by the homepage "Cleared for the work that cannot fail" section, which
+  names the same organisations at far lower risk.
+- **Save Solutions** — white ink on transparent, invisible on the light band.
+- **Four emblems** that could not be identified; they are named
+  `UNIDENTIFIED-emblem-x<ref>.png` rather than guessed at, in
+  `assets/images/clients/`.
+
+All 43 raw extracts are kept in `assets/images/clients/`, the 28 web-ready ones in
+`assets/images/clients/web/`. Higher-resolution official press-kit files would
+still be an upgrade — 27 of the 43 sources are under 100px tall.
 
 ---
 
@@ -131,7 +147,31 @@ Decided on your instruction not to wait. Each is reversible.
 
 ---
 
-## 6. Name a Grievance Officer — *decision, and the most urgent one*
+## 6. The review site cannot deploy this branch — *4 clicks*
+
+The GitHub Pages `github-pages` environment has a **Deployment branches** rule that
+permits only `claude/website-audit-plan-fe8651`. Every run from any other branch
+fails: the `deploy` job is rejected in about two seconds, records no steps, and
+has no logs to download. It is not a build failure — build and both API test
+suites pass first.
+
+That is why the live review site shows the corrected text marquee but no client
+logos: it was last published from an allowed branch at `b59df5f`, which predates
+the logo work by four commits.
+
+**To fix:** Settings → Environments → `github-pages` → Deployment branches → add
+`claude/website-brand-image-dklsyy`, or switch to "All branches". Then re-run the
+Preview workflow. This also unblocks `claude/website-audit-plan-fe8651-40hly6`,
+which has never successfully deployed either.
+
+**Alternative:** authorise a push of this branch's state onto
+`claude/website-audit-plan-fe8651`, the one branch that does deploy. Not done
+unprompted — pushing to a branch other than the assigned one needs an explicit
+say-so.
+
+---
+
+## 7. Name a Grievance Officer — *decision, and the most urgent one*
 
 **Where:** `privacy.html`, "Grievance officer" section.
 
@@ -156,7 +196,7 @@ markers, which should stay until counsel has actually reviewed them.
 
 ---
 
-## 7. From the parallel session — *its blockers, folded in*
+## 8. From the parallel session — *its blockers, folded in*
 
 The other agent finished and went idle at `85839c4`, reporting four blockers. One
 of them ("copy") turned out to be in my lane and is now **resolved**: all twelve
@@ -174,7 +214,7 @@ Its three remaining blockers need you:
 
 ---
 
-## 8. Permissions, for next time
+## 9. Permissions, for next time
 
 This repo had no `.claude/settings.json`, so every outward-facing action (git
 push, cross-agent messaging) escalated to a prompt even in auto mode. A proposed
