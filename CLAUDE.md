@@ -39,6 +39,53 @@ The name for this style is an **eyebrow** (also called a *kicker* or *overline*)
 
 When a section needs a label, prefer a real heading hierarchy over an eyebrow. Reserve the eyebrow treatment for the small stuff.
 
+### The three tests a mono-caps run has to pass
+
+Mono caps **label data**. Before adding one, check all three. The pass on
+2026-09-07 touched 40 runs that failed at least one test: 22 deleted, 9 reset in
+Plex Sans sentence case, 6 promoted into headings, 3 trimmed.
+
+1. **Does it restate something already on screen?** A strip reading
+   `GOVERN · IDENTIFY · PROTECT · DETECT · RESPOND · RECOVER` above a list whose
+   six headings are those six words is noise twice over. The BFSI industry card
+   carried `RBI · SEBI CSCRF · IRDAI · PCI DSS` over its image, again in its
+   prose, and again as chips — the same four names three times on one card, and
+   the other five sector cards each did the same with their own frameworks.
+2. **Is it a sentence?** `ARE YOU ALREADY BREACHED?`, `LIFECYCLE COMPLETE — EVERY
+   FINDING PROVEN, FIXED AND RETESTED`, `◷ MON–FRI · 09:00–18:00 IST · REPLY
+   WITHIN ONE BUSINESS DAY`. Keep the words, set them in Plex Sans sentence case.
+   Caps are for labels; a sentence in caps is shouting.
+3. **Is it carrying the subject a heading should carry?** The industries cards
+   put the sector in a 10px eyebrow (`BFSI`) and a descriptor in the `<h3>`
+   ("Banking, financial services & insurance") — the hierarchy inverted. The fix
+   is to promote, not delete: sector to the `<h3>`, descriptor to a sans line
+   beneath.
+
+**The card shape that came out of it**, now on the industries sectors and the
+service-vapt "four exercises" grid — copy it rather than inventing a third
+variant:
+
+```
+<h3>    600 20-22px Archivo   the subject
+<div>   400 14px Plex Sans    scope line — #8A92A4 on light, rgba(255,255,255,.5) on dark
+<p>     400 14-15px Plex Sans body — #5B647C on light
+```
+
+The careers entry-path cards are the deliberate exception: their eyebrow names
+the *audience* ("EXPERIENCED PROFESSIONALS") and the heading is a different
+thought ("Bring your expertise"), so it is a card badge, not a section eyebrow.
+That is the line between the two — a badge adds a fact the heading does not.
+
+A one-word eyebrow above a heading that already says it (`LEARN` over
+"Certifications, sponsored", `HEALTH` over "Family cover") adds nothing; six of
+them down a grid is the clutter this section is about. Delete the eyebrow.
+
+`scripts/check-typography.py` enforces tests 2 and 3: it fails on a mono-caps run
+over 34 characters, and on a mono-caps element immediately followed by a heading
+unless it is a date, a bare numeral or a listed card badge. Test 1 — does it
+restate something already on screen — needs a human to judge and is not checked.
+Both rules have an allowlist; every entry states why it earns the treatment.
+
 ## Client portal (`portal/`)
 
 A separate **Next.js 15 + TypeScript + Tailwind v4** app (App Router, static export) served at
@@ -98,6 +145,7 @@ Run all of these before pushing; CI runs them too.
 | `check-page-scripts.py` | `api.js` loads *before* the form scripts; `search-core.js` before `site.js` |
 | `check-content.py` | front-matter, slugs, dates, cover alt text |
 | `apply-page-seo.py --check` | the canonical/og/JSON-LD blocks are current |
+| `check-typography.py` | no mono-caps sentences, no section eyebrows above headings |
 
 `check-header-sync.py` and `check-links.py` are not redundant, and the difference
 has already cost the site once: sync only proves the headers match **each other**.

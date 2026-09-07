@@ -136,10 +136,14 @@ Decided on your instruction not to wait. Each is reversible.
 - **DPDP programme** expanded from 4 steps to the portfolio's 8 workstreams. Data
   discovery and vendor compliance were missing entirely.
 - **Education & Hospitality** added as a sixth industry sector.
-- **Careers testimonials** were attributed to two invented employees ("Arjun Mehta",
-  "Fatima Al-Kuwari"). Now attributed by role and practice only. If these quotes
-  came from real colleagues, give me their names and I will restore proper
-  attribution; if you would rather drop the quotes entirely, say so.
+- **Careers testimonials** were attributed to three invented employees ("Arjun
+  Mehta", "Fatima Al-Kuwari", and "Priya Sharma — Senior Consultant, Compliance,
+  joined 2021", which reappeared in a later edit and is now gone again). All
+  three are attributed by role and practice only. If these quotes came from real
+  colleagues, give me their names and I will restore proper attribution; if you
+  would rather drop the quotes entirely, say so. **Worth knowing:** invented
+  people keep coming back into this page — anyone editing `careers.html` should
+  check the attributions before pushing.
 - **Twelve job descriptions** were placeholder text and now carry real copy. Read
   them before the roles go live — I wrote them from the portfolio, so they are
   accurate about GISPL but I invented nothing about salary, benefits or reporting

@@ -65,6 +65,12 @@ jobs:
       - name: Check header/footer sync
         run: python3 scripts/check-header-sync.py
 
+      # Mono caps label data. This fails on a mono-caps run long enough to be a
+      # sentence, and on one sitting above a heading as a section eyebrow — the
+      # two halves of the noise pass that cleared 25 of them.
+      - name: Check typography
+        run: python3 scripts/check-typography.py
+
       - name: Install content-build dependencies
         run: pip install -r requirements.txt
 
