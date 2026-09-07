@@ -382,7 +382,50 @@
         observer.observe(el);
       });
     }
-    window.GISPLMotion = { refresh: refresh };
+
+    /* Stat count-up. The final value is in the markup, so the number is right
+       with JS off, with reduced motion on, and for anything that reads the
+       page rather than watching it. Runs once, on first intersection. */
+    function countUp(el) {
+      var text = el.textContent.trim();
+      var m = /^([^0-9]*)([0-9][0-9,]*)(.*)$/.exec(text);
+      if (!m) return;
+      var target = parseInt(m[2].replace(/,/g, ""), 10);
+      if (!isFinite(target) || target === 0) return;
+      var grouped = m[2].indexOf(",") !== -1, prefix = m[1], suffix = m[3];
+      var duration = Math.min(1600, 700 + target.toString().length * 180), start = null;
+      el.setAttribute("aria-label", text); // screen readers get the final value, not the ticks
+      function fmt(n) { return grouped ? n.toLocaleString("en-IN") : String(n); }
+      function frame(ts) {
+        if (start === null) start = ts;
+        var t = Math.min(1, (ts - start) / duration);
+        var eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = prefix + fmt(Math.round(target * eased)) + suffix;
+        if (t < 1) requestAnimationFrame(frame);
+        else { el.textContent = text; el.removeAttribute("aria-label"); }
+      }
+      requestAnimationFrame(frame);
+    }
+    var counted = new WeakSet(), countObserver;
+    if ("IntersectionObserver" in window) {
+      countObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting || counted.has(entry.target)) return;
+          counted.add(entry.target);
+          countObserver.unobserve(entry.target);
+          if (!preference.matches) countUp(entry.target);
+        });
+      }, { threshold: 0.6 });
+    }
+    function refreshCounts(root) {
+      if (!countObserver) return;
+      each((root || document).querySelectorAll(".gx-count"), function (el) {
+        if (!counted.has(el)) countObserver.observe(el);
+      });
+    }
+    refreshCounts();
+
+    window.GISPLMotion = { refresh: function (root) { refresh(root); refreshCounts(root); } };
     refresh();
     document.addEventListener("focusin", function (event) {
       running.forEach(function (_, el) { if (el.contains(event.target)) settle(el); });
