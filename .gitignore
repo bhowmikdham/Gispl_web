@@ -10,3 +10,14 @@ portal/next-env.d.ts
 
 # deploy staging tree (assembled by scripts/build-dist.py)
 dist/
+portal/tsconfig.tsbuildinfo
+
+# content build output + local venv
+build/
+.venv/
+
+# local file-store data for portal-api / site-api (real submissions in dev)
+.data/
+
+__pycache__/
+*.pyc

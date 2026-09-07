@@ -67,8 +67,8 @@ export const ENGAGEMENTS = [
       { id: "m4", label: "Final report & management presentation", due: "2026-08-21" + T },
     ],
     team: [
-      { name: "Vikram Nair", role: "Engagement Lead", email: "vikram.nair@gispl.com", side: "gispl" },
-      { name: "Sana Qureshi", role: "Senior Penetration Tester", email: "sana.qureshi@gispl.com", side: "gispl" },
+      { name: "Vikram Nair", role: "Engagement Lead", email: "vikram.nair@gisconsulting.in", side: "gispl" },
+      { name: "Sana Qureshi", role: "Senior Penetration Tester", email: "sana.qureshi@gisconsulting.in", side: "gispl" },
       { name: "Priya Nair", role: "CISO (sponsor)", email: "priya.nair@meridianfirst.example", side: "client" },
       { name: "Arjun Mehta", role: "Remediation owner", email: "arjun.mehta@meridianfirst.example", side: "client" },
     ],
@@ -100,7 +100,7 @@ export const ENGAGEMENTS = [
       { id: "m3", label: "Certificate continuation confirmed", due: "2026-03-27" + T, completedAt: "2026-03-25" + T },
     ],
     team: [
-      { name: "Meera Iyer", role: "Lead Auditor", email: "meera.iyer@gispl.com", side: "gispl" },
+      { name: "Meera Iyer", role: "Lead Auditor", email: "meera.iyer@gisconsulting.in", side: "gispl" },
       { name: "Priya Nair", role: "ISMS owner", email: "priya.nair@meridianfirst.example", side: "client" },
     ],
     frameworks: ["ISO 27001:2022"],
@@ -130,7 +130,7 @@ export const ENGAGEMENTS = [
       { id: "m3", label: "Gap register & roadmap", due: "2026-09-04" + T },
     ],
     team: [
-      { name: "Rohit Malhotra", role: "Privacy Lead", email: "rohit.malhotra@gispl.com", side: "gispl" },
+      { name: "Rohit Malhotra", role: "Privacy Lead", email: "rohit.malhotra@gisconsulting.in", side: "gispl" },
       { name: "Arjun Mehta", role: "Programme owner", email: "arjun.mehta@meridianfirst.example", side: "client" },
     ],
     frameworks: ["DPDP Act 2023"],
@@ -159,7 +159,7 @@ export const ENGAGEMENTS = [
       { id: "m2", label: "Internal testing window", due: "2026-07-18" + T },
     ],
     team: [
-      { name: "Sana Qureshi", role: "Engagement Lead", email: "sana.qureshi@gispl.com", side: "gispl" },
+      { name: "Sana Qureshi", role: "Engagement Lead", email: "sana.qureshi@gisconsulting.in", side: "gispl" },
       { name: "Ravi Menon", role: "CTO (sponsor)", email: "ravi.menon@apexlogistics.example", side: "client" },
     ],
     frameworks: ["OWASP", "PTES"],

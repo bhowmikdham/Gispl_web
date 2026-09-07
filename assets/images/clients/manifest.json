@@ -1,0 +1,346 @@
+[
+ {
+  "name": "UNIDENTIFIED-emblem-x312",
+  "w": 80,
+  "h": 77,
+  "mean_lum": 133,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "UNIDENTIFIED-emblem-x320",
+  "w": 68,
+  "h": 77,
+  "mean_lum": 182,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "UNIDENTIFIED-emblem-x323",
+  "w": 76,
+  "h": 77,
+  "mean_lum": 102,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "UNIDENTIFIED-emblem-x327",
+  "w": 87,
+  "h": 78,
+  "mean_lum": 197,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "aaj-tak",
+  "w": 108,
+  "h": 77,
+  "mean_lum": 113,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "amtron",
+  "w": 67,
+  "h": 77,
+  "mean_lum": 155,
+  "white_box": false,
+  "transparent": false
+ },
+ {
+  "name": "apex-bank",
+  "w": 68,
+  "h": 77,
+  "mean_lum": 189,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "art-housing-finance",
+  "w": 131,
+  "h": 72,
+  "mean_lum": 123,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "bajaj-financial-securities",
+  "w": 349,
+  "h": 144,
+  "mean_lum": 217,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "bajaj-finserv",
+  "w": 384,
+  "h": 131,
+  "mean_lum": 203,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "capf",
+  "w": 55,
+  "h": 77,
+  "mean_lum": 174,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "central-bank-of-india",
+  "w": 1569,
+  "h": 400,
+  "mean_lum": 135,
+  "white_box": false,
+  "transparent": false
+ },
+ {
+  "name": "cisf",
+  "w": 59,
+  "h": 78,
+  "mean_lum": 223,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "dchl",
+  "w": 57,
+  "h": 77,
+  "mean_lum": 194,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "eli-india",
+  "w": 56,
+  "h": 77,
+  "mean_lum": 185,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "ey",
+  "w": 76,
+  "h": 77,
+  "mean_lum": 58,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "gem",
+  "w": 126,
+  "h": 77,
+  "mean_lum": 226,
+  "white_box": false,
+  "transparent": false
+ },
+ {
+  "name": "govt-chhattisgarh",
+  "w": 82,
+  "h": 77,
+  "mean_lum": 98,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "gst",
+  "w": 98,
+  "h": 77,
+  "mean_lum": 93,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "hindu-cooperative-bank",
+  "w": 976,
+  "h": 128,
+  "mean_lum": 76,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "ifci",
+  "w": 164,
+  "h": 114,
+  "mean_lum": 205,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "iffco",
+  "w": 243,
+  "h": 148,
+  "mean_lum": 172,
+  "white_box": false,
+  "transparent": false
+ },
+ {
+  "name": "imt",
+  "w": 73,
+  "h": 105,
+  "mean_lum": 221,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "jk-organisation",
+  "w": 133,
+  "h": 188,
+  "mean_lum": 202,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "lic",
+  "w": 225,
+  "h": 225,
+  "mean_lum": 205,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "manipur-state-cooperative-bank",
+  "w": 481,
+  "h": 105,
+  "mean_lum": 206,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "ministry-defence",
+  "w": 128,
+  "h": 63,
+  "mean_lum": 27,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "ministry-health-family-welfare",
+  "w": 128,
+  "h": 62,
+  "mean_lum": 26,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "ministry-information-broadcasting",
+  "w": 141,
+  "h": 61,
+  "mean_lum": 26,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "ministry-science-technology",
+  "w": 113,
+  "h": 61,
+  "mean_lum": 26,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "moneymela",
+  "w": 499,
+  "h": 100,
+  "mean_lum": 143,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "mymoneymantra",
+  "w": 196,
+  "h": 40,
+  "mean_lum": 129,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "nagaland-state-cooperative-bank",
+  "w": 306,
+  "h": 91,
+  "mean_lum": 24,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "ntt",
+  "w": 59,
+  "h": 77,
+  "mean_lum": 172,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "powergrid",
+  "w": 398,
+  "h": 127,
+  "mean_lum": 190,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "punjab-and-sind-bank",
+  "w": 423,
+  "h": 119,
+  "mean_lum": 136,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "rajasthan-gramin-bank",
+  "w": 1490,
+  "h": 400,
+  "mean_lum": 116,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "save-solutions",
+  "w": 384,
+  "h": 202,
+  "mean_lum": 255,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "ssb",
+  "w": 61,
+  "h": 77,
+  "mean_lum": 134,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "taai",
+  "w": 82,
+  "h": 77,
+  "mean_lum": 188,
+  "white_box": true,
+  "transparent": false
+ },
+ {
+  "name": "tourism-finance-corporation-india",
+  "w": 420,
+  "h": 57,
+  "mean_lum": 51,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "us-air-force",
+  "w": 91,
+  "h": 77,
+  "mean_lum": 106,
+  "white_box": false,
+  "transparent": true
+ },
+ {
+  "name": "wonder-home-finance",
+  "w": 834,
+  "h": 217,
+  "mean_lum": 199,
+  "white_box": true,
+  "transparent": false
+ }
+]

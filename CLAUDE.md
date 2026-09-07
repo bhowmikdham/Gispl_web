@@ -2,6 +2,32 @@
 
 Static multi-page marketing site (vanilla HTML with inline styles). Shared `assets/css/site.css` and `assets/js/*`. Design system "Fusion": navy grounds (#07142B / #0A1A30 / #0B1E3B), orange accent #F26A21, faces Archivo (display), IBM Plex Sans (body/UI), IBM Plex Mono (labels/data). Loaded weights only: Archivo 500/600/700 (+italic 600/700), Plex Sans 400/500/600 (+italic 400), Plex Mono 400/500 — don't style with weights outside these.
 
+## Two kinds of page
+
+**Hand-maintained (11):** `index`, `services`, `service-vapt`, `service-ai-security`,
+`vapt-methodology`, `sebi-cscrf`, `dpdp-readiness`, `industries`, `about`, `careers`, `contact`.
+Edit these directly. They carry the hand-copied header/footer that
+`scripts/check-header-sync.py` guards. Their internal links are **relative** (`insights/`, not
+`/insights/`) so the site works served from a sub-path.
+
+**Generated** — everything under `/insights/**` and `/careers/roles/**`, plus `sitemap.xml`,
+`insights/rss.xml` and `assets/data/*.json`. These come from Markdown in `content/` via
+`scripts/build-content.py` into a git-ignored `build/`. **Never hand-edit them** — edit the
+Markdown. Generated pages get the shared header by extracting it from the hand-maintained pages
+at build time (`lib/pageshell.donor_shell`), which refuses to build if those pages have drifted.
+
+`article.html` and `job.html` are redirect stubs for the retired `?slug=` URLs, kept because a
+CDN cannot redirect on a query string. `privacy`, `terms`, `404` and the stubs are exempt from
+the header guard.
+
+Content is **build-time only**: there is no client-side data layer. `assets/js/config.js`,
+`admin.html` and `assets/data/{posts,jobs}.json` were deleted — the old localStorage provider
+seeded content once per browser (`gispl:seeded:v1`), so a redeployed post never reached a
+returning visitor.
+
+Full build: `cd portal && npm run build` → `.venv/bin/python scripts/build-content.py` →
+`python3 scripts/build-dist.py`. Serve `dist/`, not `build/` (only `dist/` has assets).
+
 ## Typography conventions
 
 **Eyebrow / kicker text** — the small mono, uppercase, letter-spaced label, e.g.
@@ -27,6 +53,92 @@ data in localStorage) with an AWS seam (Cognito + API) that flips via env vars �
   touch both files.
 - `next/font` bundles italic 500/600 Plex Sans that the site doesn't load — **don't style with
   those weights** or it faux-renders on the main site.
-- Deploy: `cd portal && npm run build` then `python3 scripts/build-dist.py` assembles `dist/`
-  (site + `portal/`, excludes `admin.html`). After editing the shared header on the 15 public
+- Deploy: see the full build at the top. `build-dist.py` assembles `dist/` (hand-written pages
+  + generated `build/` + `portal/`). After editing the shared header on the 11 hand-maintained
   pages, `python3 scripts/check-header-sync.py` must pass.
+- The portal is served at `<site root>/portal/`. On a nested host (GitHub Pages serves this repo
+  under `/Gispl_web/`) set `NEXT_PUBLIC_SITE_BASE_PATH=/Gispl_web` — `portal/next.config.ts` and
+  `portal/src/lib/paths.ts` both read it and **must stay in step**; a mismatch silently 404s
+  assets that `asset()` builds while `next/link` URLs keep working.
+
+## Backends (`site-api/`, `portal-api/`)
+
+Two **separate** Node 20 ESM services, zero runtime dependencies, each with its own SAM stack.
+They are kept apart on purpose: `site-api` is a public unauthenticated **write** surface,
+`portal-api` an authenticated tenant-scoped **read** one, so abuse of the first cannot reach
+client data in the second and the portal keeps its read-only IAM policy.
+
+- **`site-api/`** — the public forms: proposal request (`contact.html`), DPDP checklist gate
+  (`dpdp-readiness.html`), newsletter double opt-in (insights pages) and job applications
+  (`/careers/roles/**`). `npm test` runs 48 tests with no network and no AWS. Full detail —
+  endpoints, anti-abuse, DPDP consent posture, env vars, deploy — in `site-api/README.md`.
+  Mail goes out through **Resend** (one API key, a plain HTTPS POST, no SDK) or **SES**;
+  `STORE=memory` drops the disk and AWS requirements entirely, so the lead path runs on any
+  host — at the cost of newsletter opt-in, which needs a durable store.
+- **`portal-api/`** — the client portal's backend. See `portal-api/README.md`.
+
+**The site works with neither.** `assets/js/api.js` holds one constant, `API_BASE`, empty by
+default; while it is empty every form keeps the `mailto:` handoff it shipped with, which is what
+the GitHub Pages review deploy runs on. Stamp it at deploy time —
+`python3 scripts/build-dist.py --api-base https://…` — and the same forms post JSON instead,
+still falling back to `mailto:` on a network or 5xx failure so a lead is never dropped.
+`api.js` must load **before** `contact.js` / `newsletter.js` / `apply.js` / `dpdp.js`; the two
+hand-maintained pages carry the tag, generated pages get it from `scripts/build-content.py`.
+
+## Build scripts (`scripts/`)
+
+### The guards, and what each one actually proves
+
+Run all of these before pushing; CI runs them too.
+
+| Script | Proves |
+| --- | --- |
+| `check-header-sync.py` | the 11 hand-maintained pages carry the *same* header/footer |
+| `check-links.py` | every internal href/src **resolves to a file** |
+| `check-page-scripts.py` | `api.js` loads *before* the form scripts; `search-core.js` before `site.js` |
+| `check-content.py` | front-matter, slugs, dates, cover alt text |
+| `apply-page-seo.py --check` | the canonical/og/JSON-LD blocks are current |
+
+`check-header-sync.py` and `check-links.py` are not redundant, and the difference
+has already cost the site once: sync only proves the headers match **each other**.
+A branch merge resolved the shared header in favour of a pre-Phase-3 copy that
+pointed at the deleted `insights.html` / `roles.html`, and sync passed happily —
+identical and wrong is still identical. 81 dead nav links shipped. `check-links.py`
+is what catches that; pass it `--base-path` when the tree was built with one.
+
+`check-page-scripts.py` guards a failure that is invisible rather than broken:
+without `api.js` the forms still submit, still say thank you, and silently route
+every lead to the visitor's mail client instead of the backend.
+
+`scripts/lib/` holds shared helpers. `lib/pageshell.py` owns the single definition of the shared
+header/footer (the active-nav style pair, the skip list, the normalizer) — `check-header-sync.py`
+imports it so the guard and any future builder cannot disagree about what a correct header is.
+Content-pipeline deps are pinned in `requirements.txt` (`python3 -m venv .venv && .venv/bin/pip
+install -r requirements.txt`); the shipped site itself has zero runtime dependencies.
+
+### Two values you must not hand-edit in the pages
+
+`apply-page-seo.py` stamps a delimited `<!-- gispl:seo:begin … end -->` block into each
+hand-maintained page and **strips any pre-existing `og:*` tag** first, so a page can never carry
+two conflicting values. It derives `og:title` from that page's `<title>` and `og:description`
+from its `<meta name="description">`.
+
+- **Editing `og:title` directly in the HTML does nothing** — the next run overwrites it. When
+  `<title>` (an SEO field, carries keywords) and `og:title` (a brand surface, carries
+  positioning) must differ, set `ogTitle` on that page's entry in `content/pages.yml`. Only
+  `index` and `about` use it today, both to carry "Building the Architecture of Enterprise Trust".
+- **The header lockup lives in `content/site.yml` as `tagline`**, not only in the 11 pages.
+  Change it in one and not the other and the generated pages drift from the hand-maintained ones,
+  which `check-header-sync.py` then fails on. Change both together, then re-run
+  `apply-page-seo.py` and `build-content.py`.
+
+`make-og-image.py` and `make-post-covers.py` bake PNGs, so a stale string in one
+survives every grep the repo runs — which is how the default share image went on
+saying "CERT-IN certified" long after the wording was corrected everywhere else.
+Both now read their brand strings from `content/site.yml`; re-run them after any
+change to `tagline` or `description`.
+
+**The external `shell.py` / `pages.py` builders are gone.** They used to re-emit `index.html`,
+`careers.html` and `services.html` from a session scratchpad outside the repo, and older notes
+warn about them clobbering hand-edits. Verified 2026-08-17: they no longer exist on disk. Those
+three pages — and all 11 hand-maintained pages — are edited directly.

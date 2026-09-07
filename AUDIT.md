@@ -9,7 +9,7 @@ Legend: severity ▲ high · ● medium · ○ low
 **Progress 2026-07-12 (round 2):** P2 done except domain-blocked items — added favicon.svg + link tags, theme-color, og:title/description/type/site_name + twitter:card on all 15 public pages (canonical, og:url/og:image and sitemap.xml still NEED THE PRODUCTION DOMAIN); robots.txt (admin disallowed), 404.html, privacy.html + terms.html drafts (marked for counsel review — grievance-officer name/address are placeholders) with footer legal links sitewide; images recompressed under 256 KiB; 12 MB source PNGs + .DS_Store untracked (staged deletions, files remain on disk); logo width/height everywhere. P4 done — mega-menus, hero tabs and admin modals keyboard-operable, skip links on all pages, burger/search ARIA, apply-form labels associated, assistant gets aria-live log + focus return (left non-modal by design, no focus trap), admin login submits on Enter + page h1, reduced-motion covers hero crossfade, assistant footnote contrast raised. P5 done — globe runs on rAF and pauses off-screen/hidden + DPR-aware, hero slides 2-4 lazy-load (~700 KB deferred) and the carousel pauses when the tab is hidden, insights/article guard a missing data layer and reuse the not-found state, DPDP math unified (IST whole-days everywhere, past-deadline text), config.js on all pages so site search is consistent, roles sorted newest-first with fixed careers location options, admin modals close on Escape + data:-validated résumé link, assistant CTA href sanitized + esc hardened. P6 — .gitignore added, clean worktree removed (quizzical-kepler KEPT: it has an uncommitted about.html edit worth reviewing), scripts/check-header-sync.py guards future header drift; baseline commit still awaits user go-ahead. Deliberately skipped (noted): admin note-add modal state loss, assistant nudge session policy / FAB reveal threshold / z-index (design decisions), about.html nested wrappers.
 
 **Progress 2026-07-11 (round 1):** P0 complete (contact + newsletter now hand off to a composed
-mailto:info@gispl.com — interim until the AWS backend; apply flow surfaces CV-drop failures and
+mailto:info@gisconsulting.in — interim until the AWS backend; apply flow surfaces CV-drop failures and
 no longer claims emails were sent; all dead CTAs are real links; Client Login/LinkedIn removed
 pending real destinations; roles links + article nav unified). P1 partially done (spec labels
 removed, CERT-IN/24×7 casing unified — names/images decision still open). P3 done (faux weights
@@ -59,9 +59,14 @@ all links resolve.
   "IMAGE 4:3" (`service-vapt.html:129`), "PHOTO 16:10" ×3 + "TEAM PHOTO 4:5" + "PORTRAIT 3:4"
   (`careers.html:189,202,215,257,275`), "TEAM PHOTO 4:3" + "PORTRAIT 3:4" ×4 (about leadership).
   Either drop in real images or restyle the frames so no spec label is visible.
-- [ ] ● **DECISION NEEDED — are these real people?** about.html leadership (Rajesh Kumar CEO,
+- [x] ● **DECISION NEEDED — are these real people?** about.html leadership (Rajesh Kumar CEO,
   Aisha Rahman CISO, Vikram Nair, Meera Iyer) and careers testimonial (Priya Sharma) all have
   placeholder portraits. If dummy names → replace before launch.
+  **Resolved 2026-08-17:** they were all invented. The four leadership profiles are replaced with
+  the real founder, Dr. Naveen Dham, and his credentials from the company portfolio; the careers
+  testimonials (by then Arjun Mehta and Fatima Al-Kuwari) are now attributed by role only, which
+  is honest for anonymised staff quotes. Dr. Dham is the only named individual left on the site.
+  His portrait is still an ND monogram — a photograph is the open item, tracked in NEEDS-YOU.md.
 - [x] ○ Brand casing drift: `sebi-cscrf.html` uses "CERT-In" (title/meta/hero ×4) vs "CERT-IN"
   everywhere else; "24/7" (services, vapt) vs "24×7" (menu, service-ai-security) for same claim.
 
@@ -171,7 +176,13 @@ all links resolve.
 
 ## Decisions needed (can't be made from the code)
 
-1. Contact form + newsletter: what should they do until the AWS backend lands?
+1. ~~Contact form + newsletter: what should they do until the AWS backend lands?~~
+   **Resolved (Phase 5).** `site-api/` now captures proposal requests, the DPDP checklist gate,
+   newsletter double opt-in and job applications. The site posts to it when
+   `assets/js/api.js` carries an API base and keeps the `mailto:` handoff when it does not, so
+   nothing has to change on the review deploy. Still needed before it goes live: an SES-verified
+   sender, the account out of the SES sandbox, and SPF/DKIM/DMARC on `gisconsulting.in` —
+   see `site-api/README.md`.
 2. Leadership/testimonial names on about/careers — real or placeholders?
 3. Real images available for the placeholder frames? (Or restyle frames label-free.)
 4. LinkedIn URL and "Client Login" destination — or remove both?

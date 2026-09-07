@@ -1,0 +1,170 @@
+[
+ {
+  "slug": "ey",
+  "label": "EY",
+  "w": 63,
+  "h": 64
+ },
+ {
+  "slug": "ntt",
+  "label": "NTT",
+  "w": 49,
+  "h": 64
+ },
+ {
+  "slug": "lic",
+  "label": "LIC",
+  "w": 143,
+  "h": 72
+ },
+ {
+  "slug": "powergrid",
+  "label": "POWERGRID",
+  "w": 226,
+  "h": 72
+ },
+ {
+  "slug": "iffco",
+  "label": "IFFCO",
+  "w": 118,
+  "h": 72
+ },
+ {
+  "slug": "gem",
+  "label": "GeM",
+  "w": 118,
+  "h": 72
+ },
+ {
+  "slug": "aaj-tak",
+  "label": "Aaj Tak",
+  "w": 90,
+  "h": 64
+ },
+ {
+  "slug": "amtron",
+  "label": "AMTRON",
+  "w": 56,
+  "h": 64
+ },
+ {
+  "slug": "dchl",
+  "label": "DCHL",
+  "w": 47,
+  "h": 64
+ },
+ {
+  "slug": "eli-india",
+  "label": "Eli India",
+  "w": 47,
+  "h": 64
+ },
+ {
+  "slug": "taai",
+  "label": "TAAI",
+  "w": 68,
+  "h": 64
+ },
+ {
+  "slug": "imt",
+  "label": "IMT",
+  "w": 44,
+  "h": 64
+ },
+ {
+  "slug": "jk-organisation",
+  "label": "J.K. Organisation",
+  "w": 46,
+  "h": 64
+ },
+ {
+  "slug": "bajaj-finserv",
+  "label": "Bajaj Finserv",
+  "w": 249,
+  "h": 72
+ },
+ {
+  "slug": "bajaj-financial-securities",
+  "label": "Bajaj Financial Securities",
+  "w": 180,
+  "h": 72
+ },
+ {
+  "slug": "central-bank-of-india",
+  "label": "Central Bank of India",
+  "w": 282,
+  "h": 72
+ },
+ {
+  "slug": "punjab-and-sind-bank",
+  "label": "Punjab &amp; Sind Bank",
+  "w": 256,
+  "h": 72
+ },
+ {
+  "slug": "ifci",
+  "label": "IFCI",
+  "w": 93,
+  "h": 64
+ },
+ {
+  "slug": "tourism-finance-corporation-india",
+  "label": "Tourism Finance Corporation of India",
+  "w": 330,
+  "h": 45
+ },
+ {
+  "slug": "nagaland-state-cooperative-bank",
+  "label": "Nagaland State Co-operative Bank",
+  "w": 242,
+  "h": 72
+ },
+ {
+  "slug": "manipur-state-cooperative-bank",
+  "label": "Manipur State Co-operative Bank",
+  "w": 325,
+  "h": 72
+ },
+ {
+  "slug": "rajasthan-gramin-bank",
+  "label": "Rajasthan Gramin Bank",
+  "w": 292,
+  "h": 72
+ },
+ {
+  "slug": "art-housing-finance",
+  "label": "ART Housing Finance",
+  "w": 131,
+  "h": 72
+ },
+ {
+  "slug": "wonder-home-finance",
+  "label": "Wonder Home Finance",
+  "w": 278,
+  "h": 72
+ },
+ {
+  "slug": "moneymela",
+  "label": "Moneymela",
+  "w": 330,
+  "h": 59
+ },
+ {
+  "slug": "mymoneymantra",
+  "label": "MyMoneyMantra",
+  "w": 330,
+  "h": 67
+ },
+ {
+  "slug": "hindu-cooperative-bank",
+  "label": "Hindu Co-operative Bank",
+  "w": 330,
+  "h": 32
+ },
+ {
+  "slug": "apex-bank",
+  "label": "Apex Bank",
+  "w": 57,
+  "h": 64
+ }
+]
