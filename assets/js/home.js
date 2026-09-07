@@ -1,51 +1,90 @@
-/* GISPL home — hero carousel (4 slides, 6s dwell, pause-on-hover, progress bars)
+/* GISPL home — hero carousel (4 slides, 7s dwell, pause controls, progress bars)
    and the decorative wireframe-globe canvas. */
 (function () {
   "use strict";
-  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var reduce = preference.matches;
 
   /* ---------------- hero carousel ---------------- */
   var hero = document.getElementById("hero");
   var slides = document.querySelectorAll(".hero-slide");
   var steps = document.querySelectorAll(".hero-step");
   if (hero && slides.length) {
-    var N = slides.length, DWELL = 6000;
-    var idx = 0, prog = 0, paused = false;
+    var N = slides.length, DWELL = 7000;
+    var idx = 0, prog = 0, hovered = false, focused = false;
+    var manualPause = false, resumeRequested = false, heroVisible = true, timer = null;
+    var pauseButton = document.getElementById("heroPause");
+    hero.setAttribute("aria-roledescription", "carousel");
+    hero.setAttribute("aria-label", "Featured security services");
 
-    function apply() {
-      Array.prototype.forEach.call(slides, function (s, i) {
-        s.style.opacity = i === idx ? "1" : "0";
-        s.style.pointerEvents = i === idx ? "auto" : "none";
-        s.setAttribute("aria-hidden", i === idx ? "false" : "true");
-      });
+    function paintProgress() {
       Array.prototype.forEach.call(steps, function (st, i) {
-        var on = i === idx;
-        var num = st.querySelector(".hero-step-num"), lab = st.querySelector(".hero-step-label"), fill = st.querySelector(".hero-step-fill");
-        if (num) num.style.color = on ? "#F4915A" : "rgba(255,255,255,.4)";
-        if (lab) lab.style.color = on ? "#fff" : "rgba(255,255,255,.5)";
-        if (fill) fill.style.width = on ? (reduce ? "100%" : Math.round(prog * 100) + "%") : "0%";
+        var fill = st.querySelector(".hero-step-fill");
+        if (fill) fill.style.transform = "scaleX(" + (i === idx ? (reduce ? 1 : prog) : 0) + ")";
       });
     }
+    function apply() {
+      Array.prototype.forEach.call(slides, function (s, i) {
+        var active = i === idx;
+        s.style.opacity = active ? "1" : "0";
+        s.style.pointerEvents = active ? "auto" : "none";
+        s.classList.toggle("is-active", active);
+        s.toggleAttribute("inert", !active);
+        s.setAttribute("aria-hidden", active ? "false" : "true");
+        s.setAttribute("role", "group");
+        s.setAttribute("aria-roledescription", "slide");
+        s.setAttribute("aria-label", (i + 1) + " of " + N);
+      });
+      Array.prototype.forEach.call(steps, function (st, i) {
+        var label = st.querySelector(".hero-step-label");
+        st.setAttribute("aria-pressed", i === idx ? "true" : "false");
+        if (label) label.style.color = i === idx ? "#fff" : "rgba(255,255,255,.6)";
+      });
+      paintProgress();
+    }
     function go(i) { idx = ((i % N) + N) % N; prog = 0; apply(); }
-
+    function sync() {
+      var play = !reduce && !manualPause && (resumeRequested || (!hovered && !focused)) && heroVisible && !document.hidden;
+      if (play && timer === null) {
+        timer = setInterval(function () {
+          prog += 80 / DWELL;
+          if (prog >= 1) go(idx + 1);
+          else paintProgress();
+        }, 80);
+      } else if (!play && timer !== null) { clearInterval(timer); timer = null; }
+      if (pauseButton) {
+        pauseButton.hidden = reduce;
+        pauseButton.setAttribute("aria-pressed", manualPause ? "true" : "false");
+        pauseButton.innerHTML = manualPause ? 'Resume slideshow <span aria-hidden="true">▷</span>' : 'Pause slideshow <span aria-hidden="true">Ⅱ</span>';
+      }
+    }
     Array.prototype.forEach.call(steps, function (st, i) {
       st.addEventListener("click", function () { go(i); });
       st.addEventListener("keydown", function (ev) {
         if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(i); }
+        if (ev.key === "ArrowRight" || ev.key === "ArrowLeft") {
+          ev.preventDefault();
+          var next = (i + (ev.key === "ArrowRight" ? 1 : -1) + N) % N;
+          steps[next].focus(); go(next);
+        }
       });
     });
-    hero.addEventListener("mouseenter", function () { paused = true; });
-    hero.addEventListener("mouseleave", function () { paused = false; });
-
-    apply();
-    if (!reduce) {
-      setInterval(function () {
-        if (paused || document.hidden) return;
-        prog += 80 / DWELL;
-        if (prog >= 1) { idx = (idx + 1) % N; prog = 0; }
-        apply();
-      }, 80);
+    if (pauseButton) pauseButton.addEventListener("click", function () {
+      manualPause = !manualPause;
+      // An explicit resume works immediately, even while this button has focus.
+      resumeRequested = !manualPause;
+      sync();
+    });
+    hero.addEventListener("mouseenter", function () { hovered = true; resumeRequested = false; sync(); });
+    hero.addEventListener("mouseleave", function () { hovered = false; sync(); });
+    hero.addEventListener("focusin", function () { focused = true; resumeRequested = false; sync(); });
+    hero.addEventListener("focusout", function (event) { focused = hero.contains(event.relatedTarget); sync(); });
+    document.addEventListener("visibilitychange", sync);
+    preference.addEventListener("change", function () { reduce = preference.matches; paintProgress(); sync(); });
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) { heroVisible = entries[0].isIntersecting; sync(); }).observe(hero);
     }
+    apply(); sync();
   }
 
   /* later slides' background images load after first paint, not up front (~700KB saved on arrival) */
@@ -122,7 +161,7 @@
         rafId = requestAnimationFrame(loop);
       }
       function sync() {
-        var want = onScreen && tabVisible;
+        var want = onScreen && tabVisible && !preference.matches;
         if (want === running) return;
         running = want; last = null;
         if (want && rafId == null) rafId = requestAnimationFrame(loop);
@@ -131,6 +170,7 @@
         new IntersectionObserver(function (en) { onScreen = en[0].isIntersecting; sync(); }).observe(cv);
       }
       document.addEventListener("visibilitychange", function () { tabVisible = !document.hidden; sync(); });
+      preference.addEventListener("change", sync);
       sync();
     }
     // re-rasterize if the canvas moves to a display with a different pixel ratio

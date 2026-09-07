@@ -105,8 +105,8 @@ def category_chips(categories, active, base):
         on = (active or "All") == name
         style = ("font:500 11px %s;letter-spacing:.1em;text-transform:uppercase;"
                  "padding:9px 15px;border-radius:22px;white-space:nowrap;"
-                 "text-decoration:none;display:inline-block;" % MONO)
-        style += ("border:1px solid #F26A21;background:#F26A21;color:#fff"
+                 "text-decoration:none;display:inline-flex;align-items:center;min-height:44px;" % MONO)
+        style += ("border:1px solid #F26A21;background:#F26A21;color:#07142B"
                   if on else
                   "border:1px solid rgba(11,30,59,.16);background:#fff;color:#5B647C")
         out.append('<a class="ins-chip" href="%s" style="%s"%s>%s</a>'

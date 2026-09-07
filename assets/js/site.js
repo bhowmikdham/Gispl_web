@@ -345,6 +345,76 @@
     });
   }
 
+  /* ---- Shared scroll entrances: progressive enhancement, never hidden content ---- */
+  (function () {
+    var preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    var seen = new WeakSet(), running = new Map(), observer;
+    var cards = ".gx-svc-card,.gx-ben,.gx-path,.gx-office,.ins-card,.gx-featured-insight,.gx-insight-row";
+    var targets = cards + ",section h2,section .why-media,section .story-media";
+
+    function settle(el) {
+      var animation = running.get(el);
+      if (animation) { animation.cancel(); running.delete(el); }
+    }
+    function reveal(el) {
+      observer.unobserve(el);
+      if (preference.matches || el.contains(document.activeElement)) return;
+      var siblings = Array.prototype.filter.call(el.parentElement.children, function (node) { return node.matches(cards); });
+      var delay = Math.max(0, siblings.indexOf(el) % 3) * 65;
+      var animation = el.animate([
+        { opacity: 0, translate: "0 22px" },
+        { opacity: 1, translate: "0 0" }
+      ], { duration: 580, delay: delay, easing: "cubic-bezier(.22,.68,0,1)", fill: "backwards" });
+      running.set(el, animation);
+      animation.onfinish = function () { running.delete(el); };
+    }
+    if ("IntersectionObserver" in window && Element.prototype.animate) {
+      observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) { if (entry.isIntersecting) reveal(entry.target); });
+      }, { threshold: 0.08, rootMargin: "0px 0px -24px 0px" });
+    }
+    function refresh(root) {
+      if (!observer || preference.matches) return;
+      each((root || document).querySelectorAll(targets), function (el) {
+        // Dedicated service/methodology entrances already own their regions.
+        if (seen.has(el) || el.closest("#hero,.sv-rv,.mx-rv,.sv-hi,.mx-hi,.hero-grid,.mx-hero-grid") || el.closest(cards) !== (el.matches(cards) ? el : null)) return;
+        seen.add(el);
+        observer.observe(el);
+      });
+    }
+    window.GISPLMotion = { refresh: refresh };
+    refresh();
+    document.addEventListener("focusin", function (event) {
+      running.forEach(function (_, el) { if (el.contains(event.target)) settle(el); });
+    });
+    preference.addEventListener("change", function () {
+      if (preference.matches) {
+        if (observer) observer.disconnect();
+        running.forEach(function (_, el) { settle(el); });
+      } else { seen = new WeakSet(); refresh(); }
+    });
+
+    // One passive listener and at most one paint per frame. The methodology
+    // page has its own progress indicator, so it doesn't get a second one.
+    if (!document.getElementById("mxProgress")) {
+      var progress = document.createElement("div"), frame = null;
+      progress.className = "gx-scroll-progress";
+      progress.setAttribute("aria-hidden", "true");
+      document.body.appendChild(progress);
+      function paint() {
+        frame = null;
+        var distance = document.documentElement.scrollHeight - window.innerHeight;
+        var value = distance > 0 ? Math.max(0, Math.min(1, window.scrollY / distance)) : 0;
+        progress.style.transform = "scaleX(" + value + ")";
+      }
+      function queue() { if (frame === null) frame = requestAnimationFrame(paint); }
+      window.addEventListener("scroll", queue, { passive: true });
+      window.addEventListener("resize", queue);
+      window.addEventListener("load", queue, { once: true });
+      paint();
+    }
+  })();
+
   /* ---- AI assistant: full widget lives in assistant.js (KB bot + proactive nudge) ---- */
   (function () {
     if (window.__gxAssistant || document.getElementById("gxAiFab")) return;

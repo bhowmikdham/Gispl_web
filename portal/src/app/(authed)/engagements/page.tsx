@@ -11,13 +11,23 @@ import { SERVICE_LINE_META, SEVERITY_META, type Engagement, type Finding } from 
 import { Card, EmptyState, MiniSeverityBar, PageTitle, Pill, Segmented, Skeleton } from "@/components/ui/primitives";
 import { Reveal } from "@/components/ui/Reveal";
 import { PhaseTicks } from "@/components/engagement/PhaseTimeline";
+import { ProgressOverview } from "@/components/engagement/ProgressOverview";
+import { buildActivity, countRecent } from "@/lib/activity";
 
 type Filter = "all" | "active" | "complete";
 
 export default function EngagementsPage() {
   const engagements = useProviderQuery(() => getData().listEngagements(), []);
   const findings = useProviderQuery(() => getData().listFindings(), []);
+  const documents = useProviderQuery(() => getData().listDocuments(), []);
   const [filter, setFilter] = useState<Filter>("all");
+  const [overviewOpen, setOverviewOpen] = useState(false);
+
+  const events = useMemo(
+    () => buildActivity(engagements.data ?? [], findings.data ?? [], documents.data ?? []),
+    [engagements.data, findings.data, documents.data]
+  );
+  const newCount = useMemo(() => countRecent(events, 7, Date.now()), [events]);
 
   const byEng = useMemo(() => {
     const m = new Map<string, Finding[]>();
@@ -38,15 +48,30 @@ export default function EngagementsPage() {
       <PageTitle
         meta={`${all.length} engagements`}
         aside={
-          <Segmented<Filter>
-            value={filter}
-            onChange={setFilter}
-            options={[
-              { value: "all", label: "All", count: all.length },
-              { value: "active", label: "Active", count: all.filter((e) => e.status !== "complete").length },
-              { value: "complete", label: "Complete", count: all.filter((e) => e.status === "complete").length },
-            ]}
-          />
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setOverviewOpen(true)}
+              className="inline-flex items-center gap-2 bg-white border border-border-card rounded-[11px] px-3.5 py-2 font-body text-[13px] font-medium text-navy cursor-pointer hover:border-orange transition-colors"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="w-4 h-4 text-muted-strong" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" />
+              </svg>
+              Progress overview
+              {newCount > 0 && (
+                <span className="font-mono text-[11px] font-medium text-white bg-orange rounded-[20px] px-1.5 py-px">{newCount} new</span>
+              )}
+            </button>
+            <Segmented<Filter>
+              value={filter}
+              onChange={setFilter}
+              options={[
+                { value: "all", label: "All", count: all.length },
+                { value: "active", label: "Active", count: all.filter((e) => e.status !== "complete").length },
+                { value: "complete", label: "Complete", count: all.filter((e) => e.status === "complete").length },
+              ]}
+            />
+          </div>
         }
       >
         Engagements
@@ -63,6 +88,14 @@ export default function EngagementsPage() {
           ))}
         </div>
       )}
+
+      <ProgressOverview
+        open={overviewOpen}
+        onClose={() => setOverviewOpen(false)}
+        engagements={all}
+        findings={findings.data ?? []}
+        events={events}
+      />
     </>
   );
 }
