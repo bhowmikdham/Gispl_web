@@ -39,6 +39,32 @@ The name for this style is an **eyebrow** (also called a *kicker* or *overline*)
 
 When a section needs a label, prefer a real heading hierarchy over an eyebrow. Reserve the eyebrow treatment for the small stuff.
 
+## Figures (`assets/js/viz.js`) and case studies
+
+`viz.js` loads on all 11 hand-maintained pages (so generated pages inherit it) and
+draws every animated number and chart on the site with no dependencies:
+
+- **Count-ups** are not in `viz.js`: put `class="gx-count"` on any element whose text is
+  a number with optional prefix/suffix (`10,000+`, `24%`) and `site.js` counts it up on
+  first view. The final value stays in the HTML.
+- **Charts:** `<figure class="gx-viz" data-viz="bars|dumbbell|line">` wrapping a real
+  `<table>`. The table is the data source *and* the accessible "Show the data" view,
+  so the two cannot drift; edit the table, never the chart. `data-theme="dark"` for
+  navy sections, `data-unit`, `data-max`, `data-emphasis` on a row to highlight it.
+- **Meters:** `data-viz-meter="91" data-from="24"`; **runway meters:** `data-viz-runway`
+  with `data-start`/`data-end` (IST day-count, like the DPDP countdowns).
+
+Colours follow the dataviz palette checks: orange/blue on white, `#E85F17`/blue on
+navy, navy ordinal ramp on light. Everything honours `prefers-reduced-motion`.
+`methodology.js` keeps its own older count-up (`.mx-num`) — don't combine it with
+`.gx-count` on one element.
+
+**Case studies** are ordinary insights posts in the `case-studies` category
+(`content/categories/case-studies.md`), listed at `/insights/category/case-studies/`
+and linked from the homepage, Industries and the three service pages. They are
+representative and say so on the page; see NEEDS-YOU.md §10 before treating any
+figure in them as measured.
+
 ## Client portal (`portal/`)
 
 A separate **Next.js 15 + TypeScript + Tailwind v4** app (App Router, static export) served at
