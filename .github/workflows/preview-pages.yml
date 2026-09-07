@@ -76,6 +76,12 @@ jobs:
         # Without this, editing a page title leaves og:title stale forever.
         run: python3 scripts/apply-page-seo.py --check
 
+      - name: Check the capability index is current
+        # The chip explorer on services.html and the Services mega-menu are
+        # stamped from content/capabilities/*.md. A hand edit to either, or a
+        # new capability without a re-run, leaves a chip pointing nowhere.
+        run: python3 scripts/apply-capability-index.py --check
+
       - name: Build content pages
         # build-dist.py hard-errors without build/ — the insights and careers
         # sections live there, so a deploy missing it would 404 every nav link.

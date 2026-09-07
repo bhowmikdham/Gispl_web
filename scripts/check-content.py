@@ -61,7 +61,29 @@ COLLECTIONS = {
     ),
     "authors": ("authors", ("name", "status"), ("role", "avatar", "links", "seo")),
     "categories": ("categories", ("name", "status"), ("seo", "description")),
+    # The service catalogue — see scripts/lib/catalogue.py for what each is.
+    "practices": (
+        "practices",
+        ("title", "short", "order", "lead", "status"),
+        ("intro", "icon", "proof", "steps", "seo", "slugOverride"),
+    ),
+    "capabilities": (
+        "capabilities",
+        ("title", "practice", "order", "tagline", "summary", "status"),
+        ("label", "page", "facts", "appliesTo", "stakes", "steps", "deliverables",
+         "faq", "related", "industries", "insights", "icon", "seo", "slugOverride"),
+    ),
+    "industries": (
+        "industries",
+        ("title", "short", "order", "lead", "summary", "status"),
+        ("kicker", "regulators", "facts", "challenges", "capabilities", "clients",
+         "proof", "faq", "insights", "icon", "seo", "slugOverride"),
+    ),
 }
+
+# A capability page with fewer words than this is a stub, not an explainer —
+# the whole point of the page is that a visitor learns what the framework is.
+THIN_CAPABILITY_WORDS = 120
 
 
 class Report(object):
@@ -196,6 +218,121 @@ def check_body(body, rel, report, collection):
             report.warn(rel, "body is %d words — thin for an indexable article" % words)
 
 
+def _check_records(meta, rel, report, field, keys):
+    """A list of mappings, each carrying every key in `keys` — facts, steps,
+    deliverables, FAQ pairs. A missing key renders as an empty cell, silently."""
+    value = meta.get(field)
+    if value is None:
+        return
+    if not isinstance(value, list):
+        report.error(rel, "%s must be a list" % field)
+        return
+    for i, item in enumerate(value):
+        if not isinstance(item, dict):
+            report.error(rel, "%s[%d] must be a mapping with %s" % (field, i, "/".join(keys)))
+            continue
+        for k in keys:
+            if not str(item.get(k) or "").strip():
+                report.error(rel, "%s[%d] is missing %r" % (field, i, k))
+        for k in sorted(set(item) - set(keys)):
+            report.error(rel, "%s[%d] has unknown key %r" % (field, i, k))
+
+
+def _check_string_list(meta, rel, report, field):
+    value = meta.get(field)
+    if value is None:
+        return
+    if not isinstance(value, list) or any(not isinstance(x, str) or not x.strip() for x in value):
+        report.error(rel, "%s must be a list of non-empty strings" % field)
+
+
+def check_catalogue(practices, capabilities, industries, posts, report):
+    """Cross-references inside the service catalogue.
+
+    Every slug a record points at must exist: a `related:` entry with a typo
+    would otherwise render as a tile linking to a 404, and check-links.py runs
+    after the build — this catches it at commit time instead.
+    """
+    # Practices and capabilities share the /services/ namespace.
+    for slug, (meta, body, rel) in sorted(practices.items()):
+        if slug in capabilities:
+            report.error(rel, "practice slug %r collides with a capability of the same "
+                              "slug — both would render at /services/%s/" % (slug, slug))
+        check_seo(meta, body, rel, report, meta.get("lead"))
+        check_body(body, rel, report, "practices")
+        _check_records(meta, rel, report, "proof", ("value", "label"))
+        _check_records(meta, rel, report, "steps", ("title", "text"))
+        if not any(m.get("practice") == slug for m, _, _ in capabilities.values()):
+            report.warn(rel, "practice has no capabilities")
+
+    for slug, (meta, body, rel) in sorted(capabilities.items()):
+        check_seo(meta, body, rel, report, meta.get("summary"))
+        check_body(body, rel, report, "capabilities")
+        practice = meta.get("practice")
+        if practice and practice not in practices:
+            report.error(rel, "practice %r has no file at content/practices/%s.md"
+                         % (practice, practice))
+        page = meta.get("page")
+        if page:
+            if not os.path.exists(os.path.join(ROOT, page)):
+                report.error(rel, "page %r does not exist at the repo root" % page)
+        elif readtime.word_count(body) < THIN_CAPABILITY_WORDS:
+            report.warn(rel, "body is %d words — thin for a capability page (the visitor "
+                             "is here to learn what this is)" % readtime.word_count(body))
+        for field in ("related",):
+            for other in meta.get(field) or []:
+                if other not in capabilities:
+                    report.error(rel, "%s: no capability %r" % (field, other))
+                elif other == slug:
+                    report.error(rel, "%s lists the page itself" % field)
+        for other in meta.get("industries") or []:
+            if other not in industries:
+                report.error(rel, "industries: no industry %r" % other)
+        for other in meta.get("insights") or []:
+            if other not in posts:
+                report.error(rel, "insights: no post with slug %r" % other)
+        _check_string_list(meta, rel, report, "appliesTo")
+        _check_string_list(meta, rel, report, "stakes")
+        _check_string_list(meta, rel, report, "related")
+        _check_string_list(meta, rel, report, "industries")
+        _check_string_list(meta, rel, report, "insights")
+        _check_records(meta, rel, report, "facts", ("label", "value"))
+        _check_records(meta, rel, report, "steps", ("title", "text"))
+        _check_records(meta, rel, report, "deliverables", ("title", "text"))
+        _check_records(meta, rel, report, "faq", ("q", "a"))
+        if not page:
+            for field in ("facts", "appliesTo", "stakes", "steps", "faq"):
+                if not meta.get(field):
+                    report.warn(rel, "no %s — the page renders without that section" % field)
+
+    for slug, (meta, body, rel) in sorted(industries.items()):
+        check_seo(meta, body, rel, report, meta.get("summary"))
+        check_body(body, rel, report, "industries")
+        for other in meta.get("capabilities") or []:
+            if other not in capabilities:
+                report.error(rel, "capabilities: no capability %r" % other)
+        for other in meta.get("insights") or []:
+            if other not in posts:
+                report.error(rel, "insights: no post with slug %r" % other)
+        _check_string_list(meta, rel, report, "regulators")
+        _check_string_list(meta, rel, report, "capabilities")
+        _check_string_list(meta, rel, report, "insights")
+        _check_records(meta, rel, report, "facts", ("label", "value"))
+        _check_records(meta, rel, report, "challenges", ("title", "text"))
+        _check_records(meta, rel, report, "proof", ("value", "label"))
+        _check_records(meta, rel, report, "faq", ("q", "a"))
+        clients = meta.get("clients")
+        if clients is not None:
+            if not isinstance(clients, list):
+                report.error(rel, "clients must be a list of {group, names}")
+            else:
+                for i, g in enumerate(clients):
+                    if not isinstance(g, dict) or not g.get("group") or \
+                            not isinstance(g.get("names"), list) or not g["names"]:
+                        report.error(rel, "clients[%d] needs `group` and a non-empty "
+                                          "`names` list" % i)
+
+
 def check_dates(meta, rel, report, field):
     value = meta.get(field)
     if value in (None, ""):
@@ -260,8 +397,15 @@ def main():
         elif used == 1:
             report.warn(rel, "category has only 1 post — thin for its own page")
 
-    print("checked %d posts, %d roles, %d authors, %d categories"
-          % (len(posts), len(roles), len(authors), len(categories)))
+    practices = load_collection("practices", report, content_dir)
+    capabilities = load_collection("capabilities", report, content_dir)
+    industries = load_collection("industries", report, content_dir)
+    check_catalogue(practices, capabilities, industries, posts, report)
+
+    print("checked %d posts, %d roles, %d authors, %d categories, "
+          "%d practices, %d capabilities, %d industries"
+          % (len(posts), len(roles), len(authors), len(categories),
+             len(practices), len(capabilities), len(industries)))
 
     if report.warnings:
         print("\n%d warning(s):" % len(report.warnings))

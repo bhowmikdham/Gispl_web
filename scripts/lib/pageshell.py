@@ -163,6 +163,21 @@ def donor_shell(root, pages=None):
 
 _NAV_LINK = re.compile(r'(<a\s[^>]*href="([^"]+)"[^>]*style=")([^"]*)(")')
 
+# "Services" and "Careers" are dropdown-only <span>s with no href to match on,
+# so they are addressed by the page they stand for. Without this, every
+# generated page under /services/ and /careers/roles/ had no nav highlight at
+# all: activate() only ever looked at <a href>.
+_NAV_SPAN = re.compile(
+    r'(<span\s[^>]*class="gx-nav-link"[^>]*style=")([^"]*)("[^>]*>)([^<]+)(</span>)')
+SPAN_PAGES = {"services.html": "Services", "careers.html": "Careers"}
+
+
+def _activate_style(style):
+    for c in CURSORS:
+        if INACTIVE.format(c=c) in style:
+            return style.replace(INACTIVE.format(c=c), ACTIVE.format(c=c))
+    return style
+
 
 def activate(header, nav_href):
     """Stamp the active-nav highlight onto the nav item matching nav_href.
@@ -178,13 +193,19 @@ def activate(header, nav_href):
         prefix, href, style, close = m.groups()
         if href != nav_href:
             return m.group(0)
-        for c in CURSORS:
-            if INACTIVE.format(c=c) in style:
-                style = style.replace(INACTIVE.format(c=c), ACTIVE.format(c=c))
-                break
-        return prefix + style + close
+        return prefix + _activate_style(style) + close
 
-    return _NAV_LINK.sub(sub, header, count=0)
+    header = _NAV_LINK.sub(sub, header, count=0)
+
+    label = SPAN_PAGES.get(nav_href)
+    if label:
+        def span_sub(m):
+            prefix, style, mid, text, close = m.groups()
+            if text.strip() != label:
+                return m.group(0)
+            return prefix + _activate_style(style) + mid + text + close
+        header = _NAV_SPAN.sub(span_sub, header, count=0)
+    return header
 
 
 # Root-relative rewriting -----------------------------------------------------
