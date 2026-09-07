@@ -44,8 +44,9 @@ When a section needs a label, prefer a real heading hierarchy over an eyebrow. R
 `viz.js` loads on all 11 hand-maintained pages (so generated pages inherit it) and
 draws every animated number and chart on the site with no dependencies:
 
-- **Count-ups:** `<span data-viz-count="10000" data-suffix="+">10,000+</span>` — the
-  final value is in the HTML; JS only animates towards it once it scrolls into view.
+- **Count-ups** are not in `viz.js`: put `class="gx-count"` on any element whose text is
+  a number with optional prefix/suffix (`10,000+`, `24%`) and `site.js` counts it up on
+  first view. The final value stays in the HTML.
 - **Charts:** `<figure class="gx-viz" data-viz="bars|dumbbell|line">` wrapping a real
   `<table>`. The table is the data source *and* the accessible "Show the data" view,
   so the two cannot drift; edit the table, never the chart. `data-theme="dark"` for
@@ -55,8 +56,8 @@ draws every animated number and chart on the site with no dependencies:
 
 Colours follow the dataviz palette checks: orange/blue on white, `#E85F17`/blue on
 navy, navy ordinal ramp on light. Everything honours `prefers-reduced-motion`.
-`services.js` and `methodology.js` keep their own older count-ups (`data-count`,
-`.mx-num`) — don't put both attributes on one element.
+`methodology.js` keeps its own older count-up (`.mx-num`) — don't combine it with
+`.gx-count` on one element.
 
 **Case studies** are ordinary insights posts in the `case-studies` category
 (`content/categories/case-studies.md`), listed at `/insights/category/case-studies/`

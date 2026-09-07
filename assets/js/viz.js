@@ -1,6 +1,6 @@
 /* GISPL — viz.js: dependency-free animated figures for the hand-maintained pages.
 
-   Count-ups          <span data-viz-count="10000" data-suffix="+">10,000+</span>
+   Count-ups          are NOT here: site.js animates any .gx-count element (upstream pattern).
    Bars / dumbbells / <figure class="gx-viz" data-viz="bars|dumbbell|line">…<table>…</table></figure>
    lines              the <table> is the data source AND the accessible table
                       view; the chart is drawn from it, so the two can't drift.
@@ -67,29 +67,6 @@
       ramp: ["#A9B8D1", "#7E93B4", "#546C94", "#2F4A75", "#0B1E3B"]
     };
   }
-
-  /* ---- count-ups ---- */
-  each(document.querySelectorAll("[data-viz-count]"), function (node) {
-    var target = parseFloat(node.getAttribute("data-viz-count"));
-    if (isNaN(target)) return;
-    var prefix = attr(node, "data-prefix", ""), suffix = attr(node, "data-suffix", "");
-    var decimals = parseInt(attr(node, "data-decimals", "0"), 10) || 0;
-    var dur = parseInt(attr(node, "data-duration", "1500"), 10) || 1500;
-    var final = prefix + fmt(target, decimals) + suffix;
-    node.textContent = final;
-    whenVisible(node, function () {
-      if (reduce) { node.textContent = final; return; }
-      var t0 = null;
-      node.textContent = prefix + fmt(0, decimals) + suffix;
-      function step(ts) {
-        if (t0 === null) t0 = ts;
-        var p = Math.min((ts - t0) / dur, 1);
-        node.textContent = p < 1 ? prefix + fmt(target * ease(p), decimals) + suffix : final;
-        if (p < 1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    });
-  });
 
   /* ---- meters: a single ratio against a limit ---- */
   each(document.querySelectorAll("[data-viz-meter]"), function (node) {
