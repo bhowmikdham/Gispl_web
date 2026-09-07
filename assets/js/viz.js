@@ -6,6 +6,7 @@
                       view; the chart is drawn from it, so the two can't drift.
    Meters             <div class="gx-viz-meter" data-viz-meter="91" data-from="24">
    Runway             <div class="gx-viz-meter" data-viz-runway data-start="…" data-end="…">
+   Reveal hook        <div data-viz-reveal> gains .gx-reveal-armed at load and .is-in on first view
 
    Progressive enhancement: without JS the page shows the final numbers and the
    plain tables. Marks animate once, when they scroll into view. Honours
@@ -67,6 +68,13 @@
       ramp: ["#A9B8D1", "#7E93B4", "#546C94", "#2F4A75", "#0B1E3B"]
     };
   }
+
+  /* ---- reveal hooks: an element gets .is-in the first time it scrolls into view.
+     Armed only when JS runs, so without JS the CSS never hides anything. ---- */
+  each(document.querySelectorAll("[data-viz-reveal]"), function (node) {
+    node.classList.add("gx-reveal-armed");
+    whenVisible(node, function () { requestAnimationFrame(function () { node.classList.add("is-in"); }); });
+  });
 
   /* ---- meters: a single ratio against a limit ---- */
   each(document.querySelectorAll("[data-viz-meter]"), function (node) {
