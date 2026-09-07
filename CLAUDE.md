@@ -10,10 +10,10 @@ Edit these directly. They carry the hand-copied header/footer that
 `scripts/check-header-sync.py` guards. Their internal links are **relative** (`insights/`, not
 `/insights/`) so the site works served from a sub-path.
 
-**Generated** — everything under `/insights/**` and `/careers/roles/**`, plus `sitemap.xml`,
-`insights/rss.xml` and `assets/data/*.json`. These come from Markdown in `content/` via
-`scripts/build-content.py` into a git-ignored `build/`. **Never hand-edit them** — edit the
-Markdown. Generated pages get the shared header by extracting it from the hand-maintained pages
+**Generated** — everything under `/insights/**`, `/careers/roles/**`, `/services/**` and
+`/industries/*/`, plus `sitemap.xml`, `insights/rss.xml` and `assets/data/*.json`. These come
+from Markdown in `content/` via `scripts/build-content.py` into a git-ignored `build/`.
+**Never hand-edit them** — edit the Markdown. Generated pages get the shared header by extracting it from the hand-maintained pages
 at build time (`lib/pageshell.donor_shell`), which refuses to build if those pages have drifted.
 
 `article.html` and `job.html` are redirect stubs for the retired `?slug=` URLs, kept because a
@@ -27,6 +27,29 @@ returning visitor.
 
 Full build: `cd portal && npm run build` → `.venv/bin/python scripts/build-content.py` →
 `python3 scripts/build-dist.py`. Serve `dist/`, not `build/` (only `dist/` has assets).
+
+## The service catalogue (`content/practices`, `content/capabilities`, `content/industries`)
+
+Sixty capabilities in five practice areas, and six sectors, each a Markdown file with structured
+front-matter (facts strip, who it applies to, what is at stake, engagement steps, deliverables,
+FAQ, related slugs) and an explainer body. `scripts/lib/catalogue.py` is the one loader;
+`scripts/lib/templates_services.py` renders `/services/` (the catalogue), `/services/<practice>/`,
+`/services/<capability>/` and `/industries/<sector>/`. A capability that already has a
+hand-maintained page (VAPT, AI security, SEBI CSCRF, DPDP) sets `page:` and gets no generated
+page — the chip links to the existing one.
+
+Two hand-maintained surfaces list the same capabilities and are **stamped, not typed**:
+the chip explorer on `services.html` (between `gispl:capability-explorer` markers), the
+`SVC` array in `assets/js/site.js` (between `gispl:svc` markers) and the static `#svcItems`
+list in every page's header. `python3 scripts/apply-capability-index.py` regenerates all three;
+`--check` fails CI if they have drifted. Adding a capability is: write the `.md`, run the
+script, build. `check-content.py` errors on a `related:`, `industries:` or `insights:` slug
+that does not exist, and warns on a capability body under 120 words.
+
+Hrefs in the catalogue are root-relative without the leading slash (`services/pci-dss/`);
+the hand pages use them as-is and `site.js` prefixes `GX_ROOT` so the mega-menu resolves
+from `/insights/<slug>/` and from a sub-path deploy alike. `contact.html?service=…&industry=…`
+pre-selects the enquiry (`contact.js`); the API accepts any service text up to 80 characters.
 
 ## Typography conventions
 
@@ -98,6 +121,7 @@ Run all of these before pushing; CI runs them too.
 | `check-page-scripts.py` | `api.js` loads *before* the form scripts; `search-core.js` before `site.js` |
 | `check-content.py` | front-matter, slugs, dates, cover alt text |
 | `apply-page-seo.py --check` | the canonical/og/JSON-LD blocks are current |
+| `apply-capability-index.py --check` | the chip explorer, mega-menu and header list match `content/capabilities` |
 
 `check-header-sync.py` and `check-links.py` are not redundant, and the difference
 has already cost the site once: sync only proves the headers match **each other**.

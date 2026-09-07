@@ -180,3 +180,53 @@
     });
   }
 })();
+
+/* Hero parallax. The photograph behind the active slide drifts up at a
+   fraction of the scroll speed while the hero is in view — transform only,
+   one paint per frame, nothing while the hero is off-screen, and nothing at
+   all under prefers-reduced-motion. The slide's first child is the
+   background layer; it is scaled slightly so the drift never exposes an
+   edge. */
+(function () {
+  "use strict";
+  var hero = document.getElementById("hero");
+  if (!hero) return;
+  var preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var layers = Array.prototype.map.call(hero.querySelectorAll(".hero-slide"), function (s) { return s.firstElementChild; })
+    .filter(function (el) { return el && /url\(/.test(el.style.backgroundImage || ""); });
+  if (!layers.length) return;
+  var frame = null, active = false;
+
+  function paint() {
+    frame = null;
+    var y = window.scrollY || window.pageYOffset || 0;
+    var limit = hero.offsetHeight;
+    var shift = Math.min(y, limit) * 0.18;
+    layers.forEach(function (el) { el.style.transform = "translate3d(0," + shift.toFixed(1) + "px,0) scale(1.12)"; });
+  }
+  function queue() { if (frame === null) frame = requestAnimationFrame(paint); }
+  function start() {
+    if (active || preference.matches) return;
+    active = true;
+    layers.forEach(function (el) { el.style.willChange = "transform"; el.style.transformOrigin = "50% 40%"; });
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    paint();
+  }
+  function stop() {
+    if (!active) return;
+    active = false;
+    window.removeEventListener("scroll", queue);
+    window.removeEventListener("resize", queue);
+    layers.forEach(function (el) { el.style.transform = ""; el.style.willChange = ""; });
+  }
+  // Only listen while the hero can actually be seen.
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) start(); else stop(); });
+    }).observe(hero);
+  } else {
+    start();
+  }
+  preference.addEventListener("change", function () { if (preference.matches) stop(); else start(); });
+})();

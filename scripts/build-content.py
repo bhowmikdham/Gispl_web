@@ -12,6 +12,10 @@ Emits:
     build/insights/rss.xml                    new
     build/careers/roles/index.html            replaces roles.html
     build/careers/roles/<slug>/index.html     replaces job.html?slug=
+    build/services/index.html                 the full capability catalogue
+    build/services/<practice>/index.html      one per practice area
+    build/services/<capability>/index.html    one per capability (see lib/catalogue.py)
+    build/industries/<sector>/index.html      one per sector
     build/sitemap.xml                         new
     build/assets/data/{search-index,insights,roles}.json
 
@@ -34,6 +38,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import yaml  # noqa: E402
 
 from lib import dates, feeds, frontmatter, markdown_render, readtime, seo, templates  # noqa: E402
+from lib import templates_services as svc  # noqa: E402
+from lib.catalogue import load_catalogue  # noqa: E402
 from lib.html import esc  # noqa: E402
 from lib.pageshell import ShellDriftError, activate, donor_shell, rebase  # noqa: E402
 
@@ -50,6 +56,8 @@ ROUTES = {
 
 NAV_INSIGHTS = "insights.html"
 NAV_CAREERS = "careers.html"
+NAV_SERVICES = "services.html"
+NAV_INDUSTRIES = "industries.html"
 
 RFC822_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 RFC822_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -371,6 +379,94 @@ def main():
               "changefreq": "weekly", "priority": "0.6"},
              scripts=["api.js", "apply.js"])
 
+    # ------------------------------------------------- services + industries
+    practices, capabilities, industries = load_catalogue(CONTENT)
+    cap_by_slug = {c["slug"]: c for c in capabilities}
+    ind_by_slug = {i["slug"]: i for i in industries}
+    post_by_slug = {p["slug"]: p for p in listed}
+
+    def picked_posts(slugs, fallback_n=3):
+        chosen = [post_by_slug[s] for s in slugs if s in post_by_slug]
+        return chosen[:3] if chosen else listed[:fallback_n]
+
+    if practices:
+        emit("/services/",
+             seo.head(site, title="Every capability, mapped — %s services" % site["name"],
+                      description="%d cybersecurity, compliance and forensics capabilities across "
+                                  "%d practice areas, each explained: what it is, who it applies to, "
+                                  "what is at stake and how GISPL delivers it."
+                                  % (len(capabilities), len(practices)),
+                      path="/services/",
+                      jsonld=[org, seo.breadcrumbs(site, [("Home", "/"), ("Services", "/services/")])]),
+             svc.catalogue_page(site, practices, len(capabilities)),
+             NAV_SERVICES,
+             {"path": "/services/", "changefreq": "monthly", "priority": "0.8"})
+
+    for p in practices:
+        body_html, _ = markdown_render.render(p["body"])
+        p_inds = [i for i in industries
+                  if any(c["slug"] in i["capabilities"] for c in p["capabilities"])] or industries
+        emit(p["url"],
+             seo.head(site,
+                      title=p["seo"].get("title") or "%s — %s services" % (p["title"], site["name"]),
+                      description=p["seo"].get("description") or p["lead"],
+                      path=p["url"],
+                      jsonld=[seo.service(site, p["title"], p["lead"],
+                                          seo.absolute(site["baseUrl"], p["url"])),
+                              seo.breadcrumbs(site, [("Home", "/"), ("Services", "/services/"),
+                                                     (p["title"], p["url"])])]),
+             svc.practice_page(site, p, body_html, p_inds, listed[:3], templates.post_card),
+             NAV_SERVICES,
+             {"path": p["url"], "changefreq": "monthly", "priority": "0.8"})
+
+    for c in capabilities:
+        if not c["generated"]:
+            continue  # a hand-maintained page owns this one
+        body_html, _ = markdown_render.render(c["body"])
+        related = [cap_by_slug[s] for s in c["related"] if s in cap_by_slug][:3]
+        c_inds = [ind_by_slug[s] for s in ind_by_slug if s in c["industries"]]
+        c_inds.sort(key=lambda i: i["order"])
+        siblings = [x for x in capabilities if x["practice"] == c["practice"]]
+        url_abs = seo.absolute(site["baseUrl"], c["url"])
+        blocks = [seo.service(site, c["title"], c["summary"] or c["tagline"], url_abs),
+                  seo.breadcrumbs(site, [("Home", "/"), ("Services", "/services/"),
+                                         (c["practiceTitle"], c["practiceUrl"]),
+                                         (c["title"], c["url"])])]
+        faq = seo.faq_page([(q.get("q", ""), q.get("a", "")) for q in c["faq"]])
+        if faq:
+            blocks.append(faq)
+        emit(c["url"],
+             seo.head(site,
+                      title=c["seo"].get("title") or "%s — %s" % (c["title"], site["name"]),
+                      description=c["seo"].get("description") or c["summary"] or c["tagline"],
+                      path=c["url"], noindex=c["noindex"], jsonld=blocks),
+             svc.capability_page(site, c, body_html, related, c_inds,
+                                 picked_posts(c["insights"]), templates.post_card, siblings),
+             NAV_SERVICES,
+             None if c["noindex"] else
+             {"path": c["url"], "changefreq": "monthly", "priority": "0.7"})
+
+    for ind in industries:
+        body_html, _ = markdown_render.render(ind["body"])
+        i_caps = [cap_by_slug[s] for s in ind["capabilities"] if s in cap_by_slug][:6]
+        others = [o for o in industries if o["slug"] != ind["slug"]]
+        blocks = [seo.breadcrumbs(site, [("Home", "/"), ("Industries", "/industries.html"),
+                                         (ind["title"], ind["url"])])]
+        faq = seo.faq_page([(q.get("q", ""), q.get("a", "")) for q in ind["faq"]])
+        if faq:
+            blocks.append(faq)
+        emit(ind["url"],
+             seo.head(site,
+                      title=ind["seo"].get("title") or "%s cybersecurity & compliance — %s"
+                      % (ind["title"], site["name"]),
+                      description=ind["seo"].get("description") or ind["summary"],
+                      path=ind["url"], noindex=ind["noindex"], jsonld=blocks),
+             svc.industry_page(site, ind, body_html, i_caps, picked_posts(ind["insights"]),
+                               templates.post_card, others),
+             NAV_INDUSTRIES,
+             None if ind["noindex"] else
+             {"path": ind["url"], "changefreq": "monthly", "priority": "0.7"})
+
     # ------------------------------------------------------------- data + feeds
     data_dir = os.path.join(BUILD, "assets", "data")
 
@@ -424,6 +520,18 @@ def main():
     for entry in PAGES:
         index.append({"t": entry["title"], "h": entry["path"], "ty": "Page",
                       "s": "", "k": entry.get("keywords", "")})
+    for p in practices:
+        index.append({"t": p["title"], "h": p["url"], "ty": "Service", "s": "Practice area",
+                      "k": " ".join([p["lead"]] + [c["label"] for c in p["capabilities"]])})
+    for c in capabilities:
+        if not c["generated"]:
+            continue  # the hand page is already indexed via pages.yml
+        index.append({"t": c["title"], "h": c["url"], "ty": "Service", "s": c["practiceShort"],
+                      "k": " ".join([c["label"], c["tagline"], c["summary"]]
+                                    + [f.get("value", "") for f in c["facts"]])})
+    for i in industries:
+        index.append({"t": i["title"], "h": i["url"], "ty": "Industry", "s": i["short"],
+                      "k": " ".join([i["lead"], i["summary"]] + i["regulators"])})
     write(os.path.join(data_dir, "search-index.json"),
           json.dumps({"v": 1, "items": index}, ensure_ascii=False, indent=1))
 
@@ -446,6 +554,9 @@ def main():
           % (n["pages"], len(sitemap_entries), len(index)))
     print("  insights: %d published (%d listed) · roles: %d open of %d"
           % (len(posts), len(listed), len(open_roles), len(roles)))
+    print("  services: %d practices · %d capabilities (%d generated) · industries: %d"
+          % (len(practices), len(capabilities),
+             sum(1 for c in capabilities if c["generated"]), len(industries)))
     if prefix:
         print("  base path: %s" % prefix)
     return 0

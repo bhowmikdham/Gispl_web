@@ -21,6 +21,33 @@
       s.addEventListener("change", function () { paintSel(s); });
     });
 
+    /* Deep links from the catalogue and the sector pages —
+       contact.html?service=PCI%20DSS&industry=BFSI — pre-select the enquiry.
+       A service that is not in the fixed list is added as an option, so the
+       lead carries exactly what the visitor clicked rather than "Not sure yet";
+       the API accepts any text there (max 80). An unknown industry falls back
+       to "Other". */
+    try {
+      var params = new URLSearchParams(location.search);
+      [["service", true], ["industry", false]].forEach(function (p) {
+        var want = (params.get(p[0]) || "").trim().slice(0, 80);
+        var sel = form.querySelector('select[name="' + p[0] + '"]');
+        if (!want || !sel) return;
+        var byText = function (text) {
+          return Array.prototype.filter.call(sel.options, function (o) {
+            return o.text.trim().toLowerCase() === text.toLowerCase();
+          })[0];
+        };
+        var match = byText(want);
+        if (!match && p[1]) {
+          match = new Option(want, want);
+          sel.add(match, sel.options[sel.options.length - 1]); // keep "Not sure yet" last
+        }
+        if (!match && !p[1]) match = byText("Other");
+        if (match) { sel.value = match.value; paintSel(sel); }
+      });
+    } catch (e) { /* no URLSearchParams — the visitor picks manually */ }
+
     /* error region, created lazily so the markup stays as-is when unused */
     var err = null;
     function showError(msg) {

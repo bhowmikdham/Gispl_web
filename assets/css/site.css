@@ -348,3 +348,30 @@ a.gx-svc-card:focus-visible,a.gx-path:focus-visible,.ins-card:focus-visible{box-
   .gx-svc-card:hover,.gx-path:hover,.ins-card:hover,body .sv-card:hover,.gx-card-arrow{transform:none!important}
 }
 @media print{.gx-scroll-progress,.hero-pause{display:none}}
+
+/* ---- Service catalogue + industry pages (generated from content/ by build-content.py) ----
+   Layout-only classes; everything else on those pages is inline, like the hand pages.
+   See scripts/lib/templates_services.py. */
+.cp-hero{position:relative;overflow:hidden;background:#07142B}
+.cp-facts{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.14);border-radius:14px;overflow:hidden;max-width:1100px}
+.cp-fact{background:#0B1E3B;padding:18px 22px;min-width:0}
+.cp-fact-l{font:500 10px 'IBM Plex Mono';letter-spacing:.16em;color:rgba(255,255,255,.55);text-transform:uppercase;margin-bottom:8px}
+.cp-fact-v{font:600 15px/1.45 'IBM Plex Sans';color:#fff;margin:0}
+.cp-grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:64px;align-items:start}
+.cp-aside{position:sticky;top:104px}
+.cp-check{display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;list-style:none;margin:0;padding:0}
+.cp-check li{display:flex;gap:11px;font:400 15px/1.55 'IBM Plex Sans';color:#33405C}
+.cp-check svg{width:18px;height:18px;flex:none;color:#F26A21;margin-top:2px}
+.cp-stakes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:16px}
+.cp-stake{background:#FBFAF7;border:1px solid rgba(11,30,59,.1);border-left:3px solid #F26A21;border-radius:12px;padding:18px 22px;font:400 15px/1.6 'IBM Plex Sans';color:#33405C}
+.cp-steps{display:grid;grid-template-columns:1fr 1fr;column-gap:60px}
+.cp-step{display:flex;gap:20px;padding:22px 0}
+.cp-cat-list{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cp-cat-row{display:flex;align-items:center;justify-content:space-between;gap:20px;text-decoration:none;background:#fff;border:1px solid var(--gx-card-border,rgba(11,30,59,.1));border-radius:var(--gx-radius,14px);padding:22px 24px;transition:transform 240ms var(--gx-ease,ease),box-shadow 240ms ease,border-color 240ms ease}
+.cp-cat-row .gx-card-arrow{flex:none}
+.cp-cat-row:hover{border-color:rgba(242,106,33,.45);box-shadow:var(--gx-shadow-hover,0 24px 44px -30px rgba(7,20,43,.35));transform:translateY(-2px)}
+.cp-cat-row:hover .gx-card-arrow{background:#F26A21;color:#07142B;border-color:#F26A21;transform:rotate(45deg)}
+.cp-cat-row:focus-visible{outline:2px solid #F26A21;outline-offset:2px}
+@media(max-width:1000px){.cp-grid{grid-template-columns:1fr;gap:40px}.cp-aside{position:static}.cp-facts{grid-template-columns:1fr 1fr}.cp-steps{grid-template-columns:1fr}.cp-cat-list{grid-template-columns:1fr}}
+@media(max-width:560px){.cp-facts{grid-template-columns:1fr}.cp-check{grid-template-columns:1fr}.cp-hero .hero-h1{font-size:40px!important}}
+@media(prefers-reduced-motion:reduce){.cp-cat-row{transition:none}}
