@@ -82,8 +82,11 @@ async function main() {
   });
 
   server.listen(config.port, () => {
+    // Report the provider actually in force. This line is the first thing
+    // anyone reads when mail is not arriving, so it must not guess.
+    const mail = config.mail.from ? config.mail.provider : "console (MAIL_FROM unset)";
     console.log(
-      `GISPL site API — store=${config.store} mail=${config.mail.from ? "ses" : "console"} — http://localhost:${config.port}`
+      `GISPL site API — store=${config.store} mail=${mail} — http://localhost:${config.port}`
     );
   });
 }

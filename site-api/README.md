@@ -20,7 +20,7 @@ keeps its read-only IAM policy.
 ```bash
 cd site-api
 npm start                 # http://localhost:4100
-npm test                  # 37 tests, no network, no AWS
+npm test                  # 48 tests, no network, no AWS
 ```
 
 With no configuration it stores to `.data/site.json` and prints the
@@ -106,18 +106,86 @@ visitor data, which is the opposite of the point on a DPDP page).
 - Bump `PRIVACY_POLICY_VERSION` whenever the policy changes materially, so old
   records stay attributable to the text the person actually agreed to.
 
+## Sending the mail: Resend or SES
+
+The contact form is only worth having if the enquiry reaches a human without
+the visitor doing anything else. That needs a server, because an API key cannot
+live in a page. Two providers:
+
+**Resend (recommended).** One API key and a verified sending domain. No AWS, no
+SDK, nothing to install — the service makes a single HTTPS POST, so it runs on
+any host that can reach the internet.
+
+```bash
+MAIL_PROVIDER=resend
+RESEND_API_KEY=re_xxxxxxxx
+MAIL_FROM="GISPL <no-reply@gisconsulting.in>"   # domain must be verified in Resend
+MAIL_LEADS_TO=info@gisconsulting.in
+MAIL_CAREERS_TO=careers@gisconsulting.in
+```
+
+**SES.** Right if the stack is already AWS, but the account has to be moved out
+of the SES sandbox first — inside it, mail is only delivered to addresses you
+have separately verified, which looks exactly like working until a real
+prospect submits the form.
+
+Set neither and nothing breaks: submissions are still stored and the
+notification is written to the log. `MAIL_PROVIDER` forces a provider; left
+unset, a `RESEND_API_KEY` selects Resend and anything else falls back to SES.
+
+The startup banner reports which one is actually in force — read it first when
+mail is not arriving:
+
+```
+GISPL site API — store=memory mail=resend — http://localhost:4100
+```
+
+### Getting a lead into the sales inbox
+
+`MAIL_LEADS_TO` receives the proposal requests. The notification carries the
+whole enquiry and sets **Reply-To to the enquirer**, so sales can answer by
+pressing Reply — no copying an address out of the body. Every mail carries the
+short reference the visitor was shown on screen (`GIS-7DB62B4C`), so a follow-up
+call can be matched to the submission.
+
+## Where to run it
+
+The website is static; the API is not, and it needs somewhere to live.
+
+**Without AWS** — set `STORE=memory` and deploy to any Node host or serverless
+platform. The lead and application endpoints work fully: the notification email
+is the record. Nothing persists across restarts, which is fine for those two
+and **not** fine for the newsletter, whose double opt-in needs the pending
+subscriber to still exist when the confirmation link is clicked minutes later.
+Offer the newsletter and you need a durable store.
+
+**With AWS** — `STORE=dynamo` and the SAM stack in `infra/template.yaml`. This
+is the full service: durable records, TTL-based retention, presigned CV uploads.
+
+Either way the last step is the same — point the site at it and rebuild:
+
+```bash
+python3 scripts/build-dist.py --api-base https://api.example.com
+```
+
+Without `--api-base` every form keeps the `mailto:` handoff. That is what the
+GitHub Pages review deploy runs on, and it is why the live review site still
+opens the visitor's mail client: the code path exists, the base URL is empty.
+
 ## Configuration
 
 | Variable | Default | Notes |
 | --- | --- | --- |
 | `PORT` | `4100` | Local server only. |
-| `STORE` | `file` | `file` \| `dynamo`. |
+| `STORE` | `file` | `file` \| `memory` \| `dynamo`. `memory` needs no disk and no AWS; newsletter opt-in will not work on it. |
 | `DATA_DIR` | `./.data` | File store location. |
 | `SITE_SECRET` | `dev-only-change-me` | Signs confirm/unsubscribe links and the rate-limit keys. **Both entrypoints refuse to start** on the default with `STORE=dynamo`. |
 | `SITE_BASE` | `http://localhost:8080` | Website origin; used for the "back to the site" links. |
 | `API_BASE` | `http://localhost:$PORT` | Public origin of *this* API. The confirmation links in email are built from it — a wrong value 404s in the subscriber's inbox. |
 | `CORS_ORIGINS` | `*` | Comma-separated. Pin it in production. |
-| `MAIL_FROM` | *(empty)* | SES-verified sender. Empty ⇒ notifications are logged, submissions still stored. |
+| `MAIL_PROVIDER` | auto | `resend` \| `ses`. Unset ⇒ `resend` when `RESEND_API_KEY` is set, else `ses`. |
+| `RESEND_API_KEY` | *(empty)* | Resend key. Required for `MAIL_PROVIDER=resend`. |
+| `MAIL_FROM` | *(empty)* | Verified sender, `Name <addr>` accepted. Empty ⇒ notifications are logged, submissions still stored. |
 | `MAIL_LEADS_TO` | `info@gisconsulting.in` | Comma-separated. |
 | `MAIL_CAREERS_TO` | `careers@gisconsulting.in` | Comma-separated. |
 | `UPLOAD_BUCKET` | *(empty)* | Empty ⇒ no CV upload; the careers form asks the candidate to email it. |
@@ -164,9 +232,10 @@ GitHub Pages review deploy runs on.
 
 ### Before it goes live
 
-- Verify the `MailFrom` identity in SES, and move the account **out of the SES
-  sandbox** — in the sandbox, SES will only deliver to verified addresses, so
-  subscriber confirmation emails silently fail.
+- Verify the sending domain with your provider. On Resend that is a DNS record
+  and a few minutes; on SES it also means moving the account **out of the
+  sandbox**, since inside it SES only delivers to addresses you have separately
+  verified and confirmation emails silently fail.
 - Publish SPF/DKIM/DMARC for `gisconsulting.in` so the confirmation email is not
   filed as spam. A double opt-in that lands in junk reads as a broken form.
 - Confirm `info@` and `careers@gisconsulting.in` are monitored mailboxes.

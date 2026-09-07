@@ -70,8 +70,11 @@ client data in the second and the portal keeps its read-only IAM policy.
 
 - **`site-api/`** — the public forms: proposal request (`contact.html`), DPDP checklist gate
   (`dpdp-readiness.html`), newsletter double opt-in (insights pages) and job applications
-  (`/careers/roles/**`). `npm test` runs 37 tests with no network and no AWS. Full detail —
+  (`/careers/roles/**`). `npm test` runs 48 tests with no network and no AWS. Full detail —
   endpoints, anti-abuse, DPDP consent posture, env vars, deploy — in `site-api/README.md`.
+  Mail goes out through **Resend** (one API key, a plain HTTPS POST, no SDK) or **SES**;
+  `STORE=memory` drops the disk and AWS requirements entirely, so the lead path runs on any
+  host — at the cost of newsletter opt-in, which needs a durable store.
 - **`portal-api/`** — the client portal's backend. See `portal-api/README.md`.
 
 **The site works with neither.** `assets/js/api.js` holds one constant, `API_BASE`, empty by

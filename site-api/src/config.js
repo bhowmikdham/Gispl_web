@@ -13,7 +13,7 @@ function list(v) {
 
 export const config = {
   port: Number(env.PORT || 4100),
-  store: env.STORE || "file", // "file" | "dynamo"
+  store: env.STORE || "file", // "file" | "memory" | "dynamo"
   dataDir: env.DATA_DIR || "./.data",
 
   // Signs the double-opt-in confirm and unsubscribe links. Anyone holding this
@@ -63,14 +63,27 @@ export const config = {
   uploadPrefix: env.UPLOAD_PREFIX || "applications",
   maxCvBytes: Number(env.MAX_CV_BYTES || 8 * 1024 * 1024),
 
-  // Notification email (SES v2). With no `from` address the service records
-  // everything and logs the notification instead of sending it — that is the
-  // supported local-dev mode, not a failure.
+  // Notification email. With no `from` address the service records everything
+  // and logs the notification instead of sending it — that is the supported
+  // local-dev mode, not a failure.
+  //
+  // Two providers, because they have very different setup costs:
+  //   resend — one API key and a verified sending domain. No AWS, no SDK, no
+  //            sandbox to escape; a plain HTTPS POST, so it works on any host.
+  //   ses    — right if the rest of the stack is already AWS, but the account
+  //            must be moved OUT of the SES sandbox first or mail is only
+  //            delivered to addresses you have separately verified.
+  // MAIL_PROVIDER forces one; left unset, a RESEND_API_KEY picks resend and
+  // anything else falls back to ses.
   mail: {
+    provider: (env.MAIL_PROVIDER || (env.RESEND_API_KEY ? "resend" : "ses")).toLowerCase(),
     from: env.MAIL_FROM || "",
     leadsTo: list(env.MAIL_LEADS_TO || "info@gisconsulting.in"),
     careersTo: list(env.MAIL_CAREERS_TO || "careers@gisconsulting.in"),
     configurationSet: env.SES_CONFIGURATION_SET || "",
+    resendKey: env.RESEND_API_KEY || "",
+    // Overridable so a test can point at a local stub instead of the internet.
+    resendUrl: env.RESEND_API_URL || "https://api.resend.com/emails",
   },
 };
 

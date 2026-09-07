@@ -20,6 +20,16 @@ export async function getStore() {
   if (config.store === "dynamo") {
     const { createDynamoStore } = await import("./dynamo-store.js");
     _store = createDynamoStore();
+  } else if (config.store === "memory") {
+    const { createMemoryStore } = await import("./memory-store.js");
+    _store = createMemoryStore();
+    // Said once, at boot, because the failure it predicts is silent: the
+    // subscribe request succeeds and the confirmation link then finds nothing.
+    console.warn(
+      "[store] STORE=memory — nothing persists across restarts or invocations. " +
+      "Leads and applications are fine (the notification email is the record); " +
+      "newsletter double opt-in will NOT work. Use STORE=dynamo for that."
+    );
   } else {
     _store = createFileStore();
   }
