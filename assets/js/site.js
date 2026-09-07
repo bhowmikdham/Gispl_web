@@ -349,7 +349,7 @@
   (function () {
     var preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     var seen = new WeakSet(), running = new Map(), observer;
-    var cards = ".gx-svc-card,.gx-ben,.gx-path,.gx-office,.ins-card,.gx-featured-insight,.gx-insight-row";
+    var cards = ".gx-svc-card,.gx-ben,.gx-path,.gx-office,.ins-card,.gx-featured-insight,.gx-insight-row,.gx-case";
     var targets = cards + ",section h2,section .why-media,section .story-media";
 
     function settle(el) {
