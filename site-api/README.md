@@ -20,7 +20,7 @@ keeps its read-only IAM policy.
 ```bash
 cd site-api
 npm start                 # http://localhost:4100
-npm test                  # 48 tests, no network, no AWS
+npm test                  # 54 tests, no network, no AWS
 ```
 
 With no configuration it stores to `.data/site.json` and prints the
@@ -44,6 +44,7 @@ curl -s localhost:4100/v1/leads -H 'content-type: application/json' -d '{
 | `GET` | `/v1/subscribe/confirm?token=` | The link from that email. Marks the subscriber confirmed, returns a page. |
 | `GET` | `/v1/unsubscribe?token=` | One-click unsubscribe. Returns a page. |
 | `POST` | `/v1/applications` | Job application; returns a presigned S3 POST for the CV when uploads are configured. |
+| `POST` | `/v1/grievances` | A data-principal rights request or grievance under the DPDP Act (`/privacy/grievance/`). Returns a `GRV-` reference and the acknowledgement timelines. |
 
 Every endpoint is public. **None of them reads a stored record back out** — there
 is no `GET /v1/leads`. The notification email is the operational channel; the
@@ -100,6 +101,10 @@ visitor data, which is the opposite of the point on a DPDP page).
   confirmation link (which would let a stranger use the form to spam an inbox).
 - Unsubscribing **keeps** the record — it is the suppression list. Deleting it
   would let the next form post silently resubscribe the address.
+- **Rights requests and grievances** (§§11–14 and the s.13 mechanism) have their
+  own endpoint, their own reference prefix and their own recipient
+  (`MAIL_PRIVACY_TO`), so a statutory request can never sit in a sales queue.
+  The acknowledgement promises 2 working days / 30 days; the Rules allow 90.
 - `RETENTION_DAYS` (default 1095) drives a DynamoDB TTL on every record and an S3
   lifecycle rule on the CV prefix, so personal data is erased once its purpose is
   served rather than accumulating (§8(7)).
@@ -188,9 +193,10 @@ opens the visitor's mail client: the code path exists, the base URL is empty.
 | `MAIL_FROM` | *(empty)* | Verified sender, `Name <addr>` accepted. Empty ⇒ notifications are logged, submissions still stored. |
 | `MAIL_LEADS_TO` | `info@gisconsulting.in` | Comma-separated. |
 | `MAIL_CAREERS_TO` | `careers@gisconsulting.in` | Comma-separated. |
+| `MAIL_PRIVACY_TO` | `info@gisconsulting.in` | The Grievance Officer's inbox. Comma-separated. Give it a dedicated mailbox before go-live. |
 | `UPLOAD_BUCKET` | *(empty)* | Empty ⇒ no CV upload; the careers form asks the candidate to email it. |
 | `MAX_CV_BYTES` | `8388608` | Enforced by the presigned policy, not the client. |
-| `PRIVACY_POLICY_VERSION` | `2026-08-17` | Stamped into consent records. |
+| `PRIVACY_POLICY_VERSION` | `2026-09-10` | Stamped into consent records. |
 | `RETENTION_DAYS` | `1095` | DynamoDB TTL + S3 lifecycle. |
 | `RATE_MAX` / `RATE_WINDOW_SECONDS` | `5` / `3600` | Per IP, per route. |
 | `MIN_FILL_SECONDS` | `3` | Timing check threshold. |

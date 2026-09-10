@@ -14,6 +14,7 @@ const ROUTES = [
   ["GET", "/v1/subscribe/confirm", h.getSubscribeConfirm],
   ["GET", "/v1/unsubscribe", h.getUnsubscribe],
   ["POST", "/v1/applications", h.postApplication],
+  ["POST", "/v1/grievances", h.postGrievance],
 ];
 
 const compiled = ROUTES.map(([method, pattern, handler]) => ({

@@ -28,11 +28,13 @@ INACTIVE = "font:500 14px 'IBM Plex Sans';cursor:{c};padding:0 14px;color:rgba(2
 
 CURSORS = ("pointer", "default")
 
-# Pages that legitimately do not carry the shared shell.
+# Pages that legitimately do not carry the shared shell. privacy, terms and
+# 404 used to be here too, and drifted: they carried a mega-menu that pointed
+# nowhere and loaded no scripts, so the burger and search were dead on the one
+# page a regulator reads.
 # article.html and job.html are redirect stubs for the old ?slug= URLs — see
 # the comment in either file for why that redirect can't live at the CDN.
-SKIP = {"admin.html", "404.html", "privacy.html", "terms.html",
-        "article.html", "job.html"}
+SKIP = {"admin.html", "article.html", "job.html"}
 
 # Generated pages may opt out of the shell check with this marker.
 NO_SHELL_MARKER = "<!-- gispl:no-shell -->"

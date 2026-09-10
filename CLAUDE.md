@@ -17,8 +17,8 @@ from Markdown in `content/` via `scripts/build-content.py` into a git-ignored `b
 at build time (`lib/pageshell.donor_shell`), which refuses to build if those pages have drifted.
 
 `article.html` and `job.html` are redirect stubs for the retired `?slug=` URLs, kept because a
-CDN cannot redirect on a query string. `privacy`, `terms`, `404` and the stubs are exempt from
-the header guard.
+CDN cannot redirect on a query string. Only the stubs are exempt from the header guard; `privacy`, `terms` and `404`
+carry the shared shell and are synced like the rest.
 
 Content is **build-time only**: there is no client-side data layer. `assets/js/config.js`,
 `admin.html` and `assets/data/{posts,jobs}.json` were deleted — the old localStorage provider
@@ -93,7 +93,8 @@ client data in the second and the portal keeps its read-only IAM policy.
 
 - **`site-api/`** — the public forms: proposal request (`contact.html`), DPDP checklist gate
   (`dpdp-readiness.html`), newsletter double opt-in (insights pages) and job applications
-  (`/careers/roles/**`). `npm test` runs 48 tests with no network and no AWS. Full detail —
+  (`/careers/roles/**`) and the DPDP rights/grievance form (`/privacy/grievance/` →
+  `POST /v1/grievances`, recipient `MAIL_PRIVACY_TO`). `npm test` runs 54 tests with no network and no AWS. Full detail —
   endpoints, anti-abuse, DPDP consent posture, env vars, deploy — in `site-api/README.md`.
   Mail goes out through **Resend** (one API key, a plain HTTPS POST, no SDK) or **SES**;
   `STORE=memory` drops the disk and AWS requirements entirely, so the lead path runs on any
@@ -105,7 +106,7 @@ default; while it is empty every form keeps the `mailto:` handoff it shipped wit
 the GitHub Pages review deploy runs on. Stamp it at deploy time —
 `python3 scripts/build-dist.py --api-base https://…` — and the same forms post JSON instead,
 still falling back to `mailto:` on a network or 5xx failure so a lead is never dropped.
-`api.js` must load **before** `contact.js` / `newsletter.js` / `apply.js` / `dpdp.js`; the two
+`api.js` must load **before** `contact.js` / `newsletter.js` / `apply.js` / `dpdp.js` / `grievance.js`; the two
 hand-maintained pages carry the tag, generated pages get it from `scripts/build-content.py`.
 
 ## Build scripts (`scripts/`)

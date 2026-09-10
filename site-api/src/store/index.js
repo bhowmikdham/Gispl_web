@@ -5,6 +5,7 @@
      ready()
      putLead(lead)                     record a proposal / gated-download lead
      putApplication(app)               record a job application
+     putGrievance(rec)                 record a data-principal request or grievance
      getSubscriber(email)              → subscriber | null
      putSubscriber(sub)                upsert a subscriber
      bumpRate(key, windowSeconds)      → hits so far in the current window

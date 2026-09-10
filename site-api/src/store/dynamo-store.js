@@ -2,6 +2,7 @@
 
      PK = LEAD#<id>        SK = #META    a proposal request / gated download
      PK = APP#<id>         SK = #META    a job application
+     PK = GRV#<id>         SK = #META    a data-principal request or grievance
      PK = SUB#<email>      SK = #META    a newsletter subscriber
      PK = RL#<key>#<win>   SK = #RL      a rate-limit counter (TTL'd)
 
@@ -62,6 +63,10 @@ export function createDynamoStore() {
 
     async putApplication(app) {
       return putRecord(`APP#${app.id}`, "application", app);
+    },
+
+    async putGrievance(rec) {
+      return putRecord(`GRV#${rec.id}`, "grievance", rec);
     },
 
     async getSubscriber(email) {

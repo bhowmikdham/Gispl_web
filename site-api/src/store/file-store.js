@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, renameSync } from "
 import { join, resolve } from "node:path";
 import { config } from "../config.js";
 
-const EMPTY = { leads: [], applications: [], subscribers: [] };
+const EMPTY = { leads: [], applications: [], subscribers: [], grievances: [] };
 
 export function createFileStore() {
   const dir = resolve(config.dataDir);
@@ -62,6 +62,13 @@ export function createFileStore() {
       d.applications.push(app);
       save();
       return app;
+    },
+
+    async putGrievance(rec) {
+      const d = load();
+      d.grievances.push(rec);
+      save();
+      return rec;
     },
 
     async getSubscriber(email) {

@@ -152,6 +152,17 @@
   changefreq: yearly
   keywords: terms of use legal disclaimer governing law
 
+- path: /privacy/grievance/
+  file: privacy/grievance/index.html
+  title: Grievance redressal & data rights
+  nav: null
+  breadcrumb: Grievance redressal
+  generated: true
+  schema: null
+  priority: "0.4"
+  changefreq: yearly
+  keywords: grievance officer data principal rights dpdp access correction erasure withdraw consent nominate complaint data protection board
+
 - path: /security/disclosure/
   file: security/disclosure/index.html
   title: Vulnerability disclosure

@@ -478,3 +478,134 @@ def article_page(site, post, body_html, related):
            esc(post["title"]), MONO, esc("  ·  ".join(meta_bits)),
            cover_html, archived, SANS, body_html, rel)
     )
+
+
+# ------------------------------------------------------------------ grievance
+
+GRIEVANCE_CSS = """<style>
+.gv-input{width:100%;box-sizing:border-box;background:#fff;border:1px solid rgba(11,30,59,.22);border-radius:9px;color:#0B1E3B;font:500 15px 'IBM Plex Sans';padding:13px 14px;outline:none}
+.gv-input:focus{border-color:#F26A21;box-shadow:0 0 0 3px rgba(242,106,33,.15)}
+.gv-input::placeholder{color:#8A92A4}
+.gv-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
+@media(max-width:640px){.gv-grid{grid-template-columns:1fr}}
+.gv-steps{counter-reset:gv;list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.gv-steps li{display:flex;gap:16px;align-items:flex-start;font:400 15px/1.6 'IBM Plex Sans';color:#33405C}
+.gv-steps li::before{counter-increment:gv;content:counter(gv,decimal-leading-zero);font:500 12px 'IBM Plex Mono';color:#F26A21;flex:none;padding-top:4px}
+</style>
+"""
+
+
+def grievance_page(site):
+    """/privacy/grievance/ — the DPDP grievance-redressal mechanism.
+
+    The Act requires one (s.13) and gives a data principal the rights the
+    form lists (ss.11–14). Until this page existed, the privacy policy said
+    "write to info@" and nothing tracked what happened next. The form posts
+    to /v1/grievances, which logs a GRV reference, records consent and mails
+    the Grievance Officer — and falls back to a mailto to the same address.
+    """
+    email = site.get("email", "")
+    phone = site.get("phone", "")
+    phone_display = phone.replace("+91 ", "") if phone.startswith("+91 ") else phone
+    hq = next((o for o in site.get("offices", []) if o.get("hq")), None) or {}
+    address = ", ".join(x for x in [hq.get("street"), hq.get("city"), hq.get("region")] if x)
+
+    label = "display:flex;flex-direction:column;gap:7px;min-width:0"
+    caption = "font:600 11px 'IBM Plex Sans';letter-spacing:.06em;color:#5B647C"
+    h2 = "font:700 24px Archivo;letter-spacing:-.01em;color:#0B1E3B;margin:40px 0 12px"
+    p = "font:400 16px/1.7 'IBM Plex Sans';color:#33405C"
+    card = ("background:#F6F7F9;border:1px solid rgba(11,30,59,.1);border-radius:14px;padding:22px 24px;"
+            "font:400 15px/1.7 'IBM Plex Sans';color:#33405C")
+
+    def option(value, text, selected=False):
+        return '<option value="%s"%s>%s</option>' % (esc(value), " selected" if selected else "", esc(text))
+
+    request_types = [
+        ("access", "Access — a summary of the personal data you hold about me and who it was shared with"),
+        ("correction", "Correction — update or complete my personal data"),
+        ("erasure", "Erasure — delete my personal data"),
+        ("withdraw-consent", "Withdraw consent — stop processing I previously agreed to"),
+        ("nominate", "Nominate — name someone to exercise my rights if I cannot"),
+        ("grievance", "Grievance — a complaint about how my data has been handled"),
+        ("other", "Something else"),
+    ]
+    relationships = [
+        ("", "Select one…"),
+        ("enquirer", "I sent an enquiry or proposal request"),
+        ("subscriber", "I subscribed to the newsletter"),
+        ("candidate", "I applied for a role"),
+        ("client-contact", "I am a contact at a GISPL client"),
+        ("visitor", "I visited the website"),
+        ("other", "Other"),
+    ]
+
+    form = (
+        '<form id="grvForm" data-officer-email="' + esc(email) + '" style="position:relative;background:#F6F7F9;border:1px solid rgba(11,30,59,.1);'
+        'border-top:2px solid #F26A21;border-radius:14px;padding:30px;display:flex;flex-direction:column;gap:16px;margin-top:22px">'
+        '<label style="' + label + '"><span style="' + caption + '">WHAT ARE YOU ASKING FOR?</span>'
+        '<select name="requestType" required class="gv-input">' + "".join(option(v, t) for v, t in request_types) + '</select></label>'
+        '<div class="gv-grid">'
+        '<label style="' + label + '"><span style="' + caption + '">FULL NAME</span><input type="text" name="name" required maxlength="120" class="gv-input" autocomplete="name"></label>'
+        '<label style="' + label + '"><span style="' + caption + '">EMAIL</span><input type="email" name="email" required maxlength="200" class="gv-input" autocomplete="email"></label>'
+        '<label style="' + label + '"><span style="' + caption + '">PHONE (OPTIONAL)</span><input type="tel" name="phone" maxlength="30" class="gv-input" autocomplete="tel"></label>'
+        '<label style="' + label + '"><span style="' + caption + '">HOW DO WE KNOW YOU?</span>'
+        '<select name="relationship" class="gv-input">' + "".join(option(v, t, v == "") for v, t in relationships) + '</select></label>'
+        '</div>'
+        '<label style="' + label + '"><span style="' + caption + '">DETAILS</span>'
+        '<textarea name="details" required rows="6" maxlength="5000" class="gv-input" style="resize:vertical" '
+        'placeholder="Tell us what happened or what you would like us to do. If it helps us find your data, mention when and how you were in touch with us — for example, the role you applied for or the month you sent an enquiry."></textarea></label>'
+        '<div style="position:absolute;left:-9999px" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>'
+        '<label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer">'
+        '<input type="checkbox" name="consent" required style="margin-top:3px;accent-color:#F26A21">'
+        '<span style="font:400 13px/1.5 \'IBM Plex Sans\';color:#5B647C">I confirm the details above are accurate, and that GISPL may process them to handle this request as described in the '
+        '<a href="/privacy.html" style="color:#C4632A">privacy policy</a>. We may ask you to verify your identity before acting on it.</span></label>'
+        '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">'
+        '<button type="submit" class="gx-cta" style="border:none;cursor:pointer;background:#F26A21;color:#fff;font:600 15px \'IBM Plex Sans\';'
+        'padding:15px 26px;border-radius:10px;display:inline-flex;align-items:center;gap:9px">Submit request <span style="font-size:16px">&rarr;</span></button>'
+        '<span style="font:400 12px \'IBM Plex Sans\';color:#8A92A4">Acknowledged within 2 working days · answered within 30 days</span></div>'
+        '<div id="grvOk" role="status" style="display:none;background:#FFF4EC;border:1px solid rgba(242,106,33,.4);border-radius:10px;padding:16px;'
+        'font:500 14px/1.6 \'IBM Plex Sans\';color:#8A3A0E">Almost done — your email app should have opened with the request addressed to the Grievance Officer. '
+        'Press send there to deliver it. If nothing opened, email <a href="mailto:' + esc(email) + '" style="color:#C4632A">' + esc(email) + '</a> with the subject "Data-principal request".</div>'
+        '</form>'
+    )
+
+    return GRIEVANCE_CSS + (
+        '<main id="gx-main" style="background:#fff;min-height:70vh;padding:0 0 90px">'
+        '<div class="gx-in" style="max-width:920px;padding-top:64px">'
+        '<nav aria-label="Breadcrumb" style="font:500 12px \'IBM Plex Mono\';letter-spacing:.12em;text-transform:uppercase;color:#8A92A4;margin-bottom:18px">'
+        '<a href="/privacy.html" style="color:#8A92A4;text-decoration:none">Privacy policy</a> <span aria-hidden="true">/</span> Grievance redressal</nav>'
+        '<h1 style="font:700 44px/1.08 Archivo;letter-spacing:-.02em;color:#0B1E3B;margin:0 0 16px">Your data rights, and how to use them</h1>'
+        '<p style="font:400 18px/1.6 \'IBM Plex Sans\';color:#33405C;margin:0;max-width:64ch">Under India\'s Digital Personal Data Protection Act, 2023, you can ask us '
+        'what personal data we hold about you, have it corrected or erased, withdraw consent you gave us, nominate someone to act for you, and complain when '
+        'something has gone wrong. This page is the mechanism: one form, a reference number, and a named officer who answers to a clock.</p>'
+
+        '<h2 style="' + h2 + '">How it works</h2>'
+        '<ol class="gv-steps">'
+        '<li><span>Submit the form below. You receive a reference number (GRV-…) straight away, and everything you told us is recorded with the date and time.</span></li>'
+        '<li><span>The Grievance Officer acknowledges your request within <strong>two working days</strong>. If we need to verify that you are who you say you are — we will not release or erase someone\'s data on an unverified request — we ask then.</span></li>'
+        '<li><span>We respond in substance within <strong>30 days</strong>: the data, the correction, the confirmation of erasure, or an explanation of why we cannot do what you asked. The DPDP Rules allow up to 90 days; we do not intend to use them.</span></li>'
+        '<li><span>If you are not satisfied with our response, or we miss the deadline, you may complain to the <strong>Data Protection Board of India</strong>. The Act asks that you use our mechanism first; this page is it.</span></li>'
+        '</ol>'
+
+        '<h2 style="' + h2 + '">Whose data this covers</h2>'
+        '<p style="' + p + '">This mechanism is for personal data that GISPL holds as a <em>data fiduciary</em> — people who contacted us, subscribed to our insights, applied for a role, downloaded a resource, or are contacts at our clients. '
+        'On client engagements we usually act as a <em>data processor</em> on the client\'s instructions; if your request concerns data a client of ours holds about you, we will tell you and point you to the right fiduciary, because the law puts the duty on them.</p>'
+
+        '<h2 style="' + h2 + '">Submit a request</h2>'
+        + form +
+
+        '<h2 style="' + h2 + '">The Grievance Officer</h2>'
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px;margin-top:6px">'
+        '<div style="' + card + '"><div style="font:600 16px Archivo;color:#0B1E3B;margin-bottom:6px">Write to</div>'
+        'The Grievance Officer<br>' + esc(site.get("legalName", "")) + '<br>' + esc(address) + '<br>'
+        '<a href="mailto:' + esc(email) + '?subject=Data-principal%20request" style="color:#C4632A">' + esc(email) + '</a><br>'
+        '<a href="tel:' + esc(phone.replace(" ", "")) + '" style="color:#0B1E3B;text-decoration:none">' + esc(phone_display) + '</a> (toll-free, India)</div>'
+        '<div style="' + card + '"><div style="font:600 16px Archivo;color:#0B1E3B;margin-bottom:6px">Please include</div>'
+        'Your name and the email address you used with us; what you are asking for; and anything that helps us find your data — the role you applied for, the month you enquired, the address you subscribed with. '
+        'Put your reference number in the subject of any follow-up.</div></div>'
+
+        '<h2 style="' + h2 + '">Escalation</h2>'
+        '<p style="' + p + '">The Data Protection Board of India is the adjudicating body under the Act. You may approach it if we have not resolved your grievance within the time we have committed to here, or if you are dissatisfied with the outcome. '
+        'Its contact details and complaint process are published on its own website; we will link to them from this page as they are made available.</p>'
+        '</div></main>'
+    )

@@ -102,7 +102,7 @@ test("POST /v1/leads records a DPDP consent trail", async () => {
   const lead = db().leads.find((l) => l.ref === res.body.ref);
   assert.ok(lead.consent.text.length > 0, "the agreed wording is stored");
   assert.ok(lead.consent.at, "consent is timestamped");
-  assert.equal(lead.consent.policyVersion, "2026-08-17");
+  assert.equal(lead.consent.policyVersion, "2026-09-10");
   assert.equal(lead.consent.userAgent, "Mozilla/5.0 (test)");
   assert.ok(lead.consent.ip, "the source address is retained as proof of consent");
 });
@@ -381,6 +381,63 @@ test("an object where a string belongs is rejected, not stringified", async () =
   const res = await call("POST", "/v1/leads", { body: leadBody({ name: { $ne: null } }) });
   assert.equal(res.status, 400);
   assert.ok(res.body.fields.name);
+});
+
+/* ------------------------------------------------------------ grievances */
+
+function grievanceBody(over = {}) {
+  return {
+    requestType: "erasure",
+    name: "Meera Iyer",
+    email: "meera@example.com",
+    relationship: "candidate",
+    details: "Please erase the CV I submitted in June; I have withdrawn my application.",
+    consent: true,
+    renderedAt: Date.now() - 30000,
+    ...over,
+  };
+}
+
+test("POST /v1/grievances stores the request under its own reference prefix", async () => {
+  const res = await call("POST", "/v1/grievances", { body: grievanceBody() });
+  assert.equal(res.status, 200);
+  assert.match(res.body.ref, /^GRV-[0-9A-F]{8}$/);
+  assert.match(res.body.message, /within 2 working days/);
+  const rec = db().grievances.find((g) => g.ref === res.body.ref);
+  assert.ok(rec, "stored in the grievances collection, not among the leads");
+  assert.equal(rec.kind, "grievance");
+  assert.equal(rec.status, "received");
+  assert.equal(rec.requestType, "erasure");
+  assert.ok(!db().leads.some((l) => l.ref === res.body.ref), "a rights request is not a sales lead");
+});
+
+test("POST /v1/grievances records the consent trail with the current policy version", async () => {
+  const res = await call("POST", "/v1/grievances", { body: grievanceBody() });
+  const rec = db().grievances.find((g) => g.ref === res.body.ref);
+  assert.equal(rec.consent.policyVersion, "2026-09-10");
+  assert.match(rec.consent.purpose, /data-principal request/);
+});
+
+test("POST /v1/grievances refuses an unknown request type", async () => {
+  const res = await call("POST", "/v1/grievances", { body: grievanceBody({ requestType: "sue-you" }) });
+  assert.equal(res.status, 400);
+  assert.ok(res.body.fields.requestType);
+});
+
+test("POST /v1/grievances needs the details and the confirmation", async () => {
+  let res = await call("POST", "/v1/grievances", { body: grievanceBody({ details: "" }) });
+  assert.equal(res.status, 400);
+  assert.ok(res.body.fields.details);
+  res = await call("POST", "/v1/grievances", { body: grievanceBody({ consent: false }) });
+  assert.equal(res.status, 400);
+  assert.ok(res.body.fields.consent);
+});
+
+test("POST /v1/grievances has its own rate-limit budget", async () => {
+  const ip = freshIp();
+  for (let i = 0; i < 5; i++) await call("POST", "/v1/leads", { body: leadBody(), ip });
+  const res = await call("POST", "/v1/grievances", { body: grievanceBody(), ip });
+  assert.equal(res.status, 200, "five enquiries must not lock a person out of their statutory rights");
 });
 
 test("no endpoint reads a stored record back out", async () => {

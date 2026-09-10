@@ -39,6 +39,7 @@ process.env.MAIL_FROM = "GISPL <no-reply@gisconsulting.in>";
 process.env.RESEND_API_KEY = "re_test_key";
 process.env.RESEND_API_URL = `http://127.0.0.1:${port}/emails`;
 process.env.SITE_SECRET = "test-secret-not-the-default";
+process.env.MAIL_PRIVACY_TO = "grievance@example.test";
 
 const { sendMail } = await import("../src/notify.js");
 const { getStore } = await import("../src/store/index.js");
@@ -182,6 +183,28 @@ test("the visitor still gets a success response when the provider is down", asyn
   assert.equal(res.status, 200, "a failed notification must not fail the submission");
   const lead = store._snapshot().leads.find((l) => l.company === "Northwind Bank");
   assert.ok(lead, "and the lead is still captured, so it can be recovered");
+});
+
+test("a rights request goes to the Grievance Officer, not to sales", async () => {
+  reset();
+  const store = await getStore();
+  const res = await handleRequest({
+    method: "POST", path: "/v1/grievances", query: {}, headers: {},
+    clientIp: "203.0.113.92", userAgent: "node-test",
+    body: {
+      requestType: "access", name: "Dev Patel", email: "dev@example.com",
+      details: "Please send me a summary of the personal data you hold about me.",
+      consent: true, renderedAt: Date.now() - 30000,
+    },
+  }, { store });
+  assert.equal(res.status, 200);
+  assert.equal(received.length, 1);
+  const mail = received[0].body;
+  assert.deepEqual(mail.to, ["grievance@example.test"]);
+  assert.equal(mail.reply_to, "dev@example.com");
+  assert.match(mail.subject, /^\[GRV-[0-9A-F]{8}\] Access to personal data — Dev Patel$/);
+  assert.match(mail.text, /respond within 30 days/);
+  assert.ok(store._snapshot().grievances.length === 1, "kept in the memory store's own collection");
 });
 
 /* ------------------------------------------------------------ memory store */

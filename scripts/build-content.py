@@ -488,6 +488,19 @@ def main():
                   path="/search/", noindex=True),
          templates.search_page(), None, None, scripts=["search.js"])
 
+    emit("/privacy/grievance/",
+         seo.head(site, title="Grievance redressal and your data rights — %s" % site["name"],
+                  description="Ask GISPL for access to, correction or erasure of your personal data, "
+                              "withdraw consent, nominate a representative, or raise a grievance under "
+                              "the DPDP Act — acknowledged within 2 working days, answered within 30.",
+                  path="/privacy/grievance/",
+                  jsonld=[seo.breadcrumbs(site, [
+                      ("Home", "/"), ("Privacy policy", "/privacy.html"),
+                      ("Grievance redressal", "/privacy/grievance/")])]),
+         templates.grievance_page(site), None,
+         {"path": "/privacy/grievance/", "changefreq": "yearly", "priority": "0.4"},
+         scripts=["api.js", "grievance.js"])
+
     emit("/security/disclosure/",
          seo.head(site, title="Vulnerability disclosure policy — %s" % site["name"],
                   description="How to report a security vulnerability in GISPL's "

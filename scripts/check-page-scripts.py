@@ -6,7 +6,7 @@
 Two dependencies exist between the site's scripts, both invisible to any other
 check in this repo, and both silently degrade rather than break:
 
-  api.js BEFORE contact.js / dpdp.js / newsletter.js / apply.js
+  api.js BEFORE contact.js / dpdp.js / newsletter.js / apply.js / grievance.js
       api.js defines window.GISPL.api. Without it — or loaded after — the form
       scripts see no API and fall back to their `mailto:` handoff. The page
       still renders, the form still "works", and every lead goes to the
@@ -38,6 +38,7 @@ REQUIRES = {
     "dpdp.js": "api.js",
     "newsletter.js": "api.js",
     "apply.js": "api.js",
+    "grievance.js": "api.js",
     "site.js": "search-core.js",
 }
 

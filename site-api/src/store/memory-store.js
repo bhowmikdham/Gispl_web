@@ -18,6 +18,7 @@ const MAX_KEPT = 500;
 export function createMemoryStore() {
   const leads = [];
   const applications = [];
+  const grievances = [];
   const subscribers = new Map();
   const rate = new Map();
 
@@ -38,6 +39,10 @@ export function createMemoryStore() {
 
     async putApplication(app) {
       return push(applications, app);
+    },
+
+    async putGrievance(rec) {
+      return push(grievances, rec);
     },
 
     async getSubscriber(email) {
@@ -66,7 +71,7 @@ export function createMemoryStore() {
 
     /** Test/diagnostic seam — not exposed over HTTP by any route. */
     _snapshot() {
-      return { leads, applications, subscribers: [...subscribers.values()] };
+      return { leads, applications, grievances, subscribers: [...subscribers.values()] };
     },
   };
 }

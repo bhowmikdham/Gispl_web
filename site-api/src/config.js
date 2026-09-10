@@ -39,7 +39,7 @@ export const config = {
   // Version stamped into every consent record. Bump it whenever the privacy
   // policy changes materially, so old records stay attributable to the text
   // the person actually agreed to (DPDP §6 puts the burden of proof on us).
-  privacyPolicyVersion: env.PRIVACY_POLICY_VERSION || "2026-08-17",
+  privacyPolicyVersion: env.PRIVACY_POLICY_VERSION || "2026-09-10",
 
   // How long a lead/application/consent record is retained before DynamoDB's
   // TTL sweeps it. DPDP §8(7) requires erasure once the purpose is served;
@@ -80,6 +80,10 @@ export const config = {
     from: env.MAIL_FROM || "",
     leadsTo: list(env.MAIL_LEADS_TO || "info@gisconsulting.in"),
     careersTo: list(env.MAIL_CAREERS_TO || "careers@gisconsulting.in"),
+    // The Grievance Officer's inbox. Rights requests and grievances go here,
+    // never to sales — a DPDP request buried in a lead queue is a missed
+    // statutory deadline.
+    privacyTo: list(env.MAIL_PRIVACY_TO || "info@gisconsulting.in"),
     configurationSet: env.SES_CONFIGURATION_SET || "",
     resendKey: env.RESEND_API_KEY || "",
     // Overridable so a test can point at a local stub instead of the internet.

@@ -165,6 +165,100 @@ export async function postLead(req, ctx) {
   };
 }
 
+/* --------------------------------------------------------------- grievances */
+
+// The DPDP Act gives a data principal the rights in REQUEST_TYPES (ss.11–14)
+// and requires a grievance-redressal mechanism (s.13); the Rules put an outer
+// limit on the response time. This is the endpoint behind /privacy/grievance/.
+// It is a sibling of postLead rather than another `source` on it because the
+// recipient is the Grievance Officer, not sales; the reference prefix differs
+// so a GRV number is never mistaken for an enquiry; and the acknowledgement
+// carries the timelines the policy commits to.
+const REQUEST_TYPES = ["access", "correction", "erasure", "withdraw-consent", "nominate", "grievance", "other"];
+const REQUEST_LABEL = {
+  access: "Access to personal data",
+  correction: "Correction or updating",
+  erasure: "Erasure",
+  "withdraw-consent": "Withdrawal of consent",
+  nominate: "Nomination",
+  grievance: "Grievance",
+  other: "Other request",
+};
+const RELATIONSHIPS = ["enquirer", "subscriber", "candidate", "client-contact", "visitor", "other"];
+
+// The timelines the privacy policy publishes. The statutory outer limit is
+// what the DPDP Rules allow; the first two are GISPL's own commitment.
+export const GRIEVANCE_TIMELINES = { acknowledgeWorkingDays: 2, respondDays: 30, statutoryLimitDays: 90 };
+
+const GRIEVANCE_SPEC = {
+  requestType: { type: "choice", values: REQUEST_TYPES, required: true, max: 20, label: "Request type" },
+  name: { type: "text", required: true, max: 120, label: "Full name" },
+  email: { type: "email", required: true, max: 200, label: "Email" },
+  phone: { type: "phone", max: 30, label: "Phone" },
+  relationship: { type: "choice", values: RELATIONSHIPS, max: 20, label: "Relationship" },
+  details: { type: "longtext", required: true, max: 5000, label: "Details" },
+};
+
+export async function postGrievance(req, ctx) {
+  const g = await guard(req, ctx, "grievances");
+  if (g.blocked) return g.response || pretendAccepted(newRef("GRV"));
+
+  const { ok, value, errors } = validate(GRIEVANCE_SPEC, req.body);
+  if (!ok) return invalid(errors);
+
+  const agreed = req.body && (req.body.consent === true || req.body.consent === "true" || req.body.consent === "on");
+  if (!agreed) return invalid({ consent: "Please confirm the details are accurate so we can process your request." });
+
+  const now = new Date().toISOString();
+  const rec = {
+    id: randomUUID(),
+    ref: newRef("GRV"),
+    kind: "grievance",
+    createdAt: now,
+    status: "received",
+    ...value,
+    consent: consentRecord(
+      req,
+      "Handle a data-principal request or grievance",
+      "Ticked: the details given are accurate and GISPL may process them to handle this request, per the privacy policy."
+    ),
+  };
+
+  await ctx.store.putGrievance(rec);
+
+  const label = REQUEST_LABEL[rec.requestType] || "Request";
+  await sendMail({
+    to: config.mail.privacyTo,
+    replyTo: rec.email,
+    subject: `[${rec.ref}] ${label} — ${rec.name}`,
+    text:
+      `A data-principal request came in through /privacy/grievance/.\n` +
+      `Acknowledge within ${GRIEVANCE_TIMELINES.acknowledgeWorkingDays} working days; respond within ${GRIEVANCE_TIMELINES.respondDays} days.\n\n` +
+      detailLines([
+        ["Reference", rec.ref],
+        ["Received", rec.createdAt],
+        ["Request type", label],
+        ["Name", rec.name],
+        ["Email", rec.email],
+        ["Phone", rec.phone],
+        ["Relationship", rec.relationship],
+      ]) +
+      `\n\nDetails:\n${rec.details}\n` +
+      `\nConsent recorded: ${rec.consent.text}\n(policy ${rec.consent.policyVersion}, ${rec.consent.at})\n`,
+  });
+
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      ref: rec.ref,
+      message:
+        `Thank you — your request is logged as ${rec.ref}. The Grievance Officer will acknowledge it within ` +
+        `${GRIEVANCE_TIMELINES.acknowledgeWorkingDays} working days and respond within ${GRIEVANCE_TIMELINES.respondDays} days.`,
+    },
+  };
+}
+
 /* ---------------------------------------------------------------- subscribe */
 
 const SUBSCRIBE_SPEC = {
