@@ -221,3 +221,35 @@ push, cross-agent messaging) escalated to a prompt even in auto mode. A proposed
 allowlist — push to the feature branch only, with force-push, push-to-main,
 `git reset --hard`, `aws`, `sam deploy` and `npm publish` explicitly denied — was
 handed over in chat. An agent cannot install its own permission file, by design.
+
+---
+
+## 10. Real numbers for the case studies and charts — *verification*
+
+**Where:** homepage "What an engagement actually changes", the case-study
+blocks on the VAPT, DPDP, SEBI CSCRF and Industries pages, the three posts
+under `content/posts/` in the new **Case studies** category, and the
+illustrative charts on the VAPT, DPDP and SEBI pages.
+
+The site now carries three end-to-end case studies (a public-sector bank VAPT,
+an NBFC DPDP readiness programme, a stock broker's first CSCRF audit) and four
+charts (findings by category, an eight-week found-vs-closed curve, readiness
+before/after by workstream, first-audit observations by domain). **Every
+figure in them was written by me as a plausible, rounded illustration** of how
+such engagements go. None is drawn from a GISPL engagement record, because I
+had none to draw from.
+
+They are labelled honestly on the page — "representative engagement",
+"identities withheld, figures illustrative" — so nothing on the site claims a
+result that did not happen. But a prospect will read them as GISPL's work, so
+before launch either:
+
+- **replace the numbers with real ones** from three anonymised engagements
+  (the tables in each post and the `<table>` inside each `<figure class="gx-viz">`
+  are the only places to edit — the charts redraw from the table), or
+- **keep them as illustrations** and leave the labels exactly as they are.
+
+Either is defensible; presenting illustrative figures as measured results is
+not. The NBFC study also cites the DPDP Rules being notified on 13 November
+2025 as the start of the "runway" meters on the DPDP page — confirm that date
+matches your reading of the notification.

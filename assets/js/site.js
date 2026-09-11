@@ -343,7 +343,7 @@
   (function () {
     var preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     var seen = new WeakSet(), running = new Map(), observer;
-    var cards = ".gx-svc-card,.gx-ben,.gx-path,.gx-office,.ins-card,.gx-featured-insight,.gx-insight-row";
+    var cards = ".gx-svc-card,.gx-ben,.gx-path,.gx-office,.ins-card,.gx-featured-insight,.gx-insight-row,.gx-case,.gx-ledger-row";
     // Children of a [data-gx-stagger] container (numbered step lists) enter one
     // after another, top to bottom, instead of all at once.
     var staggered = "[data-gx-stagger]>*";

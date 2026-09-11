@@ -21,6 +21,7 @@ TINTS = {
     "forensics": "rgba(169,30,71,.24)",
     "payments": "rgba(242,106,33,.2)",
     "dpdp": "rgba(242,176,30,.22)",
+    "case-studies": "rgba(27,175,122,.22)",
 }
 DEFAULT_TINT = "rgba(242,106,33,.22)"
 
